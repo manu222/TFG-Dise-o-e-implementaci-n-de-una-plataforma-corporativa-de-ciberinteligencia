@@ -1,0 +1,239 @@
+{
+  "main": {
+    "id": "2dbfbf8c832a35d8",
+    "type": "split",
+    "children": [
+      {
+        "id": "d585015da9f8fcf6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "814c80a0c8f4f3dd",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "TFG/DUDAS.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "DUDAS"
+            }
+          },
+          {
+            "id": "eaeda24fcd2cfd1d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "TFG/MISC.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "MISC"
+            }
+          },
+          {
+            "id": "995f92c786f053d3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "TFG/Infra/Network/NET.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "NET"
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "d5f7ac25b7f32cad",
+    "type": "split",
+    "children": [
+      {
+        "id": "35e96494c74d5b50",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "593e094282abaa60",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "e57a321661c6878a",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "10a534a3c636145e",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "aad068b4960e87ba",
+    "type": "split",
+    "children": [
+      {
+        "id": "e9ac0f3ab8d86d53",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4c340c491b2bb62a",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "TFG/Infra/Network/FireWalling.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for FireWalling"
+            }
+          },
+          {
+            "id": "f232d0aa9469058b",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "TFG/Infra/Network/FireWalling.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from FireWalling"
+            }
+          },
+          {
+            "id": "34810f48c2713590",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "c5f5b6795665e742",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "719441bfefd0f839",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "TFG/Infra/Network/FireWalling.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of FireWalling"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "995f92c786f053d3",
+  "lastOpenFiles": [
+    "Pasted image 20260203173015.png",
+    "WhatsApp Image 2026-01-07 at 18.54.53.jpeg",
+    "TFG/Infra/Network/NET.md",
+    "TFG/Infra/Network/FireWalling.md",
+    "Pasted image 20251220200856.png",
+    "Pasted image 20260107184228.png",
+    "Welcome.md",
+    "Pasted image 20251220200842.png",
+    "Pasted image 20251220200818.png",
+    "Pasted image 20251220200806.png",
+    "Pasted image 20251220200744.png",
+    "TFG/MISC.md",
+    "Pasted image 20251220200644.png",
+    "TFG/Infra/Network",
+    "TFG/DUDAS.md",
+    "TFG/Notas.md",
+    "Pasted image 20251220185802.png",
+    "TFG/Pasted image 20251220184854.png",
+    "TFG/Accesos",
+    "TFG/Infra",
+    "TFG"
+  ]
+}
