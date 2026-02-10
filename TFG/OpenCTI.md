@@ -132,7 +132,7 @@ graph RL
     B --> C[Configurar Usuario Servicio]
     C --> D[Desplegar OpenCTI Core]
     D --> E{¿HTTPS Requerido?}
-    E -- Sí --> F[Configurar Certs & Vols]
+    E -- Sí --> F[Configurar Certs]
     E -- No --> G[Acceso HTTP :8080]
     F --> H[Acceso HTTPS :443]
     G --> I[Configurar Conectores]
