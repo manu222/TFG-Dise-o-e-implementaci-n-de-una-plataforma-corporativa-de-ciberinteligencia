@@ -181,7 +181,7 @@ ssh-copy-id usuario@ip_nic_externa_router
 # para conectarse al router y reglas de enrutamiento
 ```
 
-Host routertfg
+Host routertfg </br>
   HostName ``ip-nic-externa-router``
   User  ``user``
   IdentityFile ~/.ssh/id_ed25519
