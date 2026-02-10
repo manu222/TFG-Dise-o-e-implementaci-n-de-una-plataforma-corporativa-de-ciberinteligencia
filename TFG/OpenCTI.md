@@ -105,10 +105,6 @@ sudo passwd opencti_svc
 
 **Referencia:** [Elastic Docs – Linux Virtual Memory Settings](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html)
 
-Por lo que no haria falta un valor como: 
-![[Pasted image 20260210231252.png]]
-`42949672960 bytes ÷ 4096 ≈ 10,485,760`
-
 ```bash
 sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee --append /etc/sysctl.conf
