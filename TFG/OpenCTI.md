@@ -182,42 +182,42 @@ ssh-copy-id usuario@ip_nic_externa_router
 ```
 
 Host routertfg </br>
-  HostName ``ip-nic-externa-router``</br>
-  User  ``user``</br>
-  IdentityFile ~/.ssh/id_ed25519</br>
+  &ensp; HostName ``ip-nic-externa-router``</br>
+  &ensp; User  ``user``</br>
+  &ensp; IdentityFile ~/.ssh/id_ed25519</br>
   
 ```bash
 # para port forwarding
 ```
 
-  LocalForward 2222 79.137.70.95:8006</br>
-  LocalForward 3336 10.0.0.2:9200</br>
-  LocalForward 3334 10.0.0.2:8080</br>
-  LocalForward 3335 10.0.0.2:15672</br>
+  &ensp; LocalForward 2222 79.137.70.95:8006</br>
+  &ensp; LocalForward 3336 10.0.0.2:9200</br>
+  &ensp; LocalForward 3334 10.0.0.2:8080</br>
+  &ensp; LocalForward 3335 10.0.0.2:15672</br>
   
 ```bash
 # para usar cli de opencti
 ```
 Host opencti</br>
-  HostName ``ip-opencti``</br>
-  User ``user``</br>
-  ProxyJump routertfg</br>
+  &ensp; HostName ``ip-opencti``</br>
+  &ensp; User ``user``</br>
+  &ensp; ProxyJump routertfg</br>
 ```bash
 # para usar cli del host proxmox
 ```
 Host nexus</br> 
   &ensp; HostName ``ip-publica-proxmox``</br>
-  User ``user``</br>
-  ProxyJump routertfg</br>
+  &ensp; User ``user``</br>
+  &ensp; ProxyJump routertfg</br>
 
 ```bash
 # para usar sftp de opencti
 ```
 Host opencti_svc</br>
-  HostName 10.0.0.2</br>
-  User opencti_svc</br>
-  ProxyJump routertfg</br>
-  IdentityFile ~/.ssh/id_ed25519</br>
+  &ensp; HostName 10.0.0.2</br>
+  &ensp; User opencti_svc</br>
+  &ensp; ProxyJump routertfg</br>
+  &ensp; IdentityFile ~/.ssh/id_ed25519</br>
 
 - Con la anterior configuración ya podremos escribir `ssh routertfg` y entraremos sin contraseña al router y se abriran los puertos para poder comprobar que **OpenCTI** esta funcionando, para entrar sin contraseña al resto de maquinas tendremos que copiar la clave publica a estas 
 
