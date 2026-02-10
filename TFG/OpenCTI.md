@@ -205,8 +205,8 @@ Host opencti</br>
 ```bash
 # para usar cli del host proxmox
 ```
-Host nexus</br>
-  HostName ``ip-publica-proxmox``</br>
+Host nexus</br> 
+  &ensp; HostName ``ip-publica-proxmox``</br>
   User ``user``</br>
   ProxyJump routertfg</br>
 
