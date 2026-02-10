@@ -109,3 +109,33 @@ sudo passwd opencti_svc
 sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee --append /etc/sysctl.conf
 ```
+
+### 4.2 Instalación de Docker Engine
+
+- [ ] Instalar Docker:
+
+```Bash
+sudo apt install -y ca-certificates curl gnupg lsb-release
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-compose
+sudo systemctl enable --now docker
+sudo usermod -a -G docker opencti_svc
+```
+
+
+# 📊  Diagrama de Flujo instalación mínima operativa
+```mermaid
+graph RL
+    A[Inicio: VM Proxmox] --> B[Instalar Debian & Docker]
+    B --> C[Configurar Usuario Servicio]
+    C --> D[Desplegar OpenCTI Core]
+    D --> E{¿HTTPS Requerido?}
+    E -- Sí --> F[Configurar Certs & Vols]
+    E -- No --> G[Acceso HTTP :8080]
+    F --> H[Acceso HTTPS :443]
+    G --> I[Configurar Conectores]
+    H --> I
+    I --> J[Fin: Plataforma Operativa]
+```
