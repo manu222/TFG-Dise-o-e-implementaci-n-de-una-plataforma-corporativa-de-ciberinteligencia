@@ -10,13 +10,7 @@
 ---
 
 ## 📑 Tabla de Contenidos
-1. [Requisitos del Sistema](#1-requisitos-del-sistema)
-2. [Creación y Configuración de la VM](#2-creación-y-configuración-de-la-vm)
-3. [Instalación del Sistema Operativo](#3-instalación-del-sistema-operativo)
-4. [Instalación de OpenCTI](#4-instalación-de-opencti)
-5. [Configuración de Conectores (AlienVault)](#5-configuración-de-conectores-alienvault)
-6. [Mantenimiento y Actualización](#6-mantenimiento-y-actualización)
-7. [Securización: OpenCTI sobre TLS](#7-securización-opencti-sobre-tls)
+
 
 ---
 
@@ -157,7 +151,7 @@ SMTP_HOSTNAME=opencti #tambien $(hostname)
 	- [x] Editar `.env` (`nano .env`) y actualizar:
 	- `OPENCTI_ADMIN_EMAIL`
 	- `OPENCTI_ADMIN_PASSWORD`
-	- `OPENCTI_BASE_URL` ç
+	- `OPENCTI_BASE_URL`
 
 
 4. **Lanzar Servicio**
