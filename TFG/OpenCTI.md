@@ -180,17 +180,21 @@ ssh-copy-id usuario@ip_nic_externa_router
 ```bash
 # para conectarse al router y reglas de enrutamiento
 ```
+
 Host routertfg
   HostName ``ip-nic-externa-router``
   User  ``user``
   IdentityFile ~/.ssh/id_ed25519
+  
 ```bash
 # para port forwarding
 ```
+
   LocalForward 2222 79.137.70.95:8006
   LocalForward 3336 10.0.0.2:9200
   LocalForward 3334 10.0.0.2:8080
   LocalForward 3335 10.0.0.2:15672
+  
 ```bash
 # para usar cli de opencti
 ```
