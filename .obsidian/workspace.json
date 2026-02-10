@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TFG/Infra/Network/NET.md",
+                "file": "TFG/OpenCTI.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "NET"
+              "title": "OpenCTI"
             }
           }
         ]
@@ -207,24 +207,26 @@
   },
   "active": "da0feb0ffeea581e",
   "lastOpenFiles": [
-    "TFG/Notas.md",
-    "TFG/Infra/Network/NET.md",
-    "TFG/Infra/Network/FireWalling.md",
+    "Pasted image 20260210231252.png",
     "TFG/MISC.md",
     "TFG/DUDAS.md",
-    "Pasted image 20251220200842.png",
-    "Pasted image 20251220200806.png",
-    "Pasted image 20251220182557.png",
-    "Pasted image 20251220184358.png",
-    "Pasted image 20251220185802.png",
+    "TFG/Infra/1. Arquitectura de Red Propuesta.md",
+    "TFG/Infra/Network/NET.md",
+    "TFG/Infra/Network/FireWalling.md",
+    "TFG/OpenCTI.md",
     "Pasted image 20251220200644.png",
-    "WhatsApp Image 2026-01-07 at 18.54.53.jpeg",
+    "Pasted image 20251220185802.png",
+    "Pasted image 20251220184358.png",
+    "Pasted image 20251220200744.png",
+    "Pasted image 20251220200806.png",
+    "Pasted image 20251220200818.png",
+    "Pasted image 20251220200842.png",
+    "Pasted image 20251220200856.png",
+    "Pasted image 20260107184228.png",
+    "Pasted image 20260203173015.png",
     "TFG/Infra/Network",
     "TFG/Infra",
     "TFG",
-    "Pasted image 20260203173015.png",
-    "Pasted image 20260107184228.png",
-    "Pasted image 20251220200856.png",
     "Bienvenido.md"
   ]
 }
