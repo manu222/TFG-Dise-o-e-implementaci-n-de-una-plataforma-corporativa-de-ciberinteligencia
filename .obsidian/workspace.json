@@ -1,24 +1,24 @@
 {
   "main": {
-    "id": "416201a2bded0a9d",
+    "id": "2dbfbf8c832a35d8",
     "type": "split",
     "children": [
       {
-        "id": "27fc00b481ed0d94",
+        "id": "075b87a488d99dfa",
         "type": "tabs",
         "children": [
           {
-            "id": "da0feb0ffeea581e",
+            "id": "5717923bb107f0d7",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TFG/OpenCTI.md",
+                "file": "TFG/Configuración VM Router.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "OpenCTI"
+              "title": "Configuración VM Router"
             }
           }
         ]
@@ -27,15 +27,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "bb495ef1ff801e61",
+    "id": "d5f7ac25b7f32cad",
     "type": "split",
     "children": [
       {
-        "id": "f053f404aa332811",
+        "id": "35e96494c74d5b50",
         "type": "tabs",
         "children": [
           {
-            "id": "a81af68fcb7121e0",
+            "id": "593e094282abaa60",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -44,11 +44,11 @@
                 "autoReveal": false
               },
               "icon": "lucide-folder-closed",
-              "title": "Explorador de archivos"
+              "title": "Files"
             }
           },
           {
-            "id": "c3829bd87c95e98e",
+            "id": "e57a321661c6878a",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -61,17 +61,17 @@
                 "sortOrder": "alphabetical"
               },
               "icon": "lucide-search",
-              "title": "Buscar"
+              "title": "Search"
             }
           },
           {
-            "id": "7c435a4c491d4ab8",
+            "id": "10a534a3c636145e",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
               "state": {},
               "icon": "lucide-bookmark",
-              "title": "Marcadores"
+              "title": "Bookmarks"
             }
           }
         ]
@@ -81,20 +81,20 @@
     "width": 300
   },
   "right": {
-    "id": "00182e5365f0eb86",
+    "id": "aad068b4960e87ba",
     "type": "split",
     "children": [
       {
-        "id": "83199fcefd2a9dca",
+        "id": "e9ac0f3ab8d86d53",
         "type": "tabs",
         "children": [
           {
-            "id": "083a69337e1fe2a4",
+            "id": "4c340c491b2bb62a",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Bienvenido.md",
+                "file": "TFG/Infra/Network/FireWalling.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,25 +104,25 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Enlaces entrantes de Bienvenido"
+              "title": "Backlinks for FireWalling"
             }
           },
           {
-            "id": "3ddbff1c54cfcb31",
+            "id": "f232d0aa9469058b",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Bienvenido.md",
+                "file": "TFG/Infra/Network/FireWalling.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Enlaces salientes de Bienvenido"
+              "title": "Outgoing links from FireWalling"
             }
           },
           {
-            "id": "0f327804fbdfdb42",
+            "id": "34810f48c2713590",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -133,11 +133,11 @@
                 "searchQuery": ""
               },
               "icon": "lucide-tags",
-              "title": "Etiquetas"
+              "title": "Tags"
             }
           },
           {
-            "id": "b4031f7480aff39c",
+            "id": "c5f5b6795665e742",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -147,26 +147,26 @@
                 "searchQuery": ""
               },
               "icon": "lucide-archive",
-              "title": "Todas las propiedades"
+              "title": "All properties"
             }
           },
           {
-            "id": "4cc127065fecd486",
+            "id": "719441bfefd0f839",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "Bienvenido.md",
+                "file": "TFG/Infra/Network/FireWalling.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Esquema de Bienvenido"
+              "title": "Outline of FireWalling"
             }
           },
           {
-            "id": "5a64f9a4cdfa85a7",
+            "id": "a5ee7ad80b17162b",
             "type": "leaf",
             "state": {
               "type": "git-view",
@@ -174,61 +174,53 @@
               "icon": "git-pull-request",
               "title": "Source Control"
             }
-          },
-          {
-            "id": "8e4cbd8d85fe1a3c",
-            "type": "leaf",
-            "state": {
-              "type": "mermaid-toolbar-view",
-              "state": {},
-              "icon": "trident-custom",
-              "title": "Mermaid Toolbar"
-            }
           }
         ],
         "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
-      "switcher:Abrir selector rápido": false,
-      "graph:Abrir vista gráfica": false,
-      "canvas:Crear nuevo lienzo": false,
-      "daily-notes:Abrir la nota de hoy": false,
-      "templates:Insertar plantilla": false,
-      "command-palette:Abrir paleta de comandos": false,
-      "bases:Crear nueva base": false,
+      "mermaid-tools:Open Mermaid Toolbar": false,
       "obsidian-git:Open Git source control": false,
-      "mermaid-tools:Open Mermaid Toolbar": false
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
     }
   },
-  "active": "da0feb0ffeea581e",
+  "active": "5717923bb107f0d7",
   "lastOpenFiles": [
-    "Pasted image 20260211153552.png",
-    "imgs-openctiDOC/AlienVaultRunning.png",
-    "imgs-openctiDOC/DashboardCTI.png",
-    "imgs-openctiDOC",
-    "Nueva carpeta",
-    "Pasted image 20251220200644.png",
-    "Pasted image 20251220185802.png",
-    "Pasted image 20251220184358.png",
-    "TFG/DUDAS.md",
     "TFG/OpenCTI.md",
+    "TFG/Configuración VM Router.md",
+    "Pasted image 20251220184358.png",
+    "Pasted image 20251220185802.png",
+    "Pasted image 20251220200644.png",
+    "Pasted image 20251220200744.png",
+    "Pasted image 20251220200806.png",
+    "Pasted image 20251220200818.png",
+    "Pasted image 20251220200842.png",
+    "Pasted image 20251220200856.png",
+    "Pasted image 20260107184228.png",
+    "Pasted image 20260203173015.png",
+    "imgs-router",
+    "Nueva carpeta",
+    "TFG/DUDAS.md",
     "TFG/MISC.md",
-    "domain.png",
-    "Pasted image 20251220182557.png",
-    "Pasted image 20260210231252.png",
-    "WhatsApp Image 2026-01-07 at 18.54.53.jpeg",
-    "TFG/Infra/1. Arquitectura de Red Propuesta.md",
+    "TFG/Notas.md",
+    "imgs-openctiDOC",
     "TFG/Infra/Network/NET.md",
     "TFG/Infra/Network/FireWalling.md",
-    "Pasted image 20251220200744.png",
+    "Welcome.md",
     "TFG/Infra/Network",
+    "TFG/Accesos",
     "TFG/Infra",
-    "TFG",
-    "Bienvenido.md"
+    "TFG"
   ]
 }
