@@ -14,8 +14,31 @@
 
 ## 2. Configuración Red
 
-
 ### /etc/nftables.conf 
+
+Este archivo configura las reglas de filtrado de paquetes. Estás usando **nftables**, el sucesor moderno de `iptables`.
+
+- **Propósito:** Permitir que las máquinas de tu red privada (10.0.0.x) salgan a internet usando la única IP pública que tienes en la interfaz externa.
+    
+
+**Explicación del código:**
+
+- `flush ruleset`: Borra cualquier regla anterior para empezar limpio.
+    
+- **`table ip nat` (La magia del router):**
+    
+    - `chain postrouting`: Actúa cuando el paquete ya está saliendo de la VM.
+        
+    - `oif "ens19" masquerade`: **Esta es la línea más importante.** Significa "Todo lo que salga por la interfaz `ens19` (la WAN/Internet), enmascaralo con mi IP pública". Esto es el **NAT**. Sin esto, las máquinas internas enviarían paquetes con la IP 10.0.0.x a Google, y Google no sabría cómo responder.
+        
+- **`table ip filter` (El permiso de paso):**
+    
+    - `chain forward`: Controla el tráfico que _atraviesa_ la máquina (no el que va _a_ la máquina).
+        
+    - `iif "ens18" oif "ens19" accept`: Permite pasar el tráfico que entra por la LAN (`ens18`) y quiere salir por la WAN (`ens19`).
+        
+    - `ct state established,related accept`: Permite que la respuesta de internet (ej. la web que pediste) pueda volver a entrar hacia tu red privada.
+
 ```bash
 flush ruleset
 
@@ -37,12 +60,81 @@ table ip filter {
 
 ### /etc/sysctl.conf  
 
+Configuración de parámetros de Linux.
+
+- `net.ipv4.ip_forward=1`:
+    
+    - **Explicación:** Por defecto, Linux es un "sistema final" (si recibe un paquete que no es para él, lo tira).
+        
+    - Al descomentar esta línea y ponerla en `1`, le dices al Kernel: **"Si recibes un paquete que no es para ti, reenvíalo a donde corresponda"**.
+        
+    - **Importancia:** Sin esto, aunque `nftables` esté bien configurado, el Kernel bloquearía el tráfico antes de procesarlo. Es el switch  para convertir un servidor en un router.
+
 ```bash
 # Uncomment the next line to enable packet forwarding for IPv4
 net.ipv4.ip_forward=1
 ```
 
-### ip addr
+### /etc/netplan/01-netcfg.yaml     
+
+Define las IPs estáticas y rutas de las tarjetas de red. 
+
+- **`ens19` (WAN - Interfaz Externa):**
+    
+    - `addresses: [145.239.16.147/32]`: Tu IP pública. El `/32` indica que es una IP única, sin red alrededor.
+        
+    - `routes`: Configuración especial para proveedores de hosting. Como la máscara es `/32`, no hay puerta de enlace "en la misma red". La ruta dice: "Para llegar al Gateway `145.239.16.254`, lánzalo por la interfaz (`via: 0.0.0.0` y `scope: link`)".
+        
+    - `nameservers`: Usamos OpenDNS y Google (8.8.8.8) para resolver dominios.
+        
+- **`ens18` (LAN - Interfaz Interna):**
+    
+    - `addresses: [10.0.0.1/24]`: Esta es la IP privada de tu router.
+        
+    - **Importancia:** Esta IP (`10.0.0.1`) será la **Gateway** que hay que configurar en otras máquinas virtuales (como la de OpenCTI) para que tengan internet.
+
+```yml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens19:
+      dhcp4: no
+      dhcp6: no
+      addresses: [145.239.16.147/32]
+      gateway4: 145.239.16.254
+      nameservers:
+        addresses: [208.67.222.222,208.67.220.220,8.8.8.8]
+      routes:
+      - to: 145.239.16.254/32
+        via: 0.0.0.0
+        scope: link
+    ens18:
+      addresses: [10.0.0.1/24]
+
+```
+
+### ip addr (Verificación de estado)
+
+Este comando muestra la realidad actual de las interfaces tras aplicar la configuración.
+
+1. **`lo` (Loopback):** Interfaz interna del sistema (127.0.0.1). Todo correcto.
+    
+2. **`ens18` (LAN):**
+    
+    - Estado `UP`.
+        
+    - IP `10.0.0.1/24`.
+        
+    - Confirma que la red interna está lista para conectar otras VMs.
+        
+3. **`ens19` (Tu WAN):**
+    
+    - Estado `UP`.
+        
+    - IP `145.239.16.147/32`.
+        
+    - Confirma que tenemos conexión con el proveedor.
 
 ```bash
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
@@ -67,25 +159,29 @@ net.ipv4.ip_forward=1
        valid_lft forever preferred_lft forever
 ```
 
-### /etc/netplan/01-netcfg.yaml     
+## Diagrama enrutamiento y forwarding
 
-```yml
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    ens19:
-      dhcp4: no
-      dhcp6: no
-      addresses: [145.239.16.147/32]
-      gateway4: 145.239.16.254
-      nameservers:
-        addresses: [208.67.222.222,208.67.220.220,8.8.8.8]
-      routes:
-      - to: 145.239.16.254/32
-        via: 0.0.0.0
-        scope: link
-    ens18:
-      addresses: [10.0.0.1/24]
+```mermaid
+graph TD
+    subgraph Internet
+        ISP[ISP Gateway<br>145.239.16.254]
+    end
 
+    subgraph "Router VM (Tu Configuración)"
+        WAN[ens19<br>145.239.16.147]
+        Kernel[("sysctl: ip_forward=1<br>nftables: NAT Masquerade")]
+        LAN_IF[ens18<br>10.0.0.1]
+    end
+
+    subgraph "Red Privada (Laboratorio)"
+        VM1[OpenCTI<br>10.0.0.2]
+        VM2[Otras VMs...]
+    end
+
+    %% Conexiones
+    VM1 -- Gateway: 10.0.0.1 --> LAN_IF
+    LAN_IF <--> Kernel
+    Kernel <--> WAN
+    WAN -- Ruta Estática --> ISP
 ```
+

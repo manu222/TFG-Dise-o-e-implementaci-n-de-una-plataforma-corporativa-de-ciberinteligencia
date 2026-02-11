@@ -93,7 +93,7 @@ sudo passwd opencti_svc
   - Múltiples índices y shards
   - Evitar errores de “too many memory mapped areas”
   
-Aunque mas tarde le demos solo **10 GB** en las variables de entorno
+Aunque mas tarde le demos solo **10 GB** en las variables de entorno, esto es la memoria máxima que puede usar un proceso
 
 **Referencia:** [Elastic Docs – Linux Virtual Memory Settings](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html)
 
