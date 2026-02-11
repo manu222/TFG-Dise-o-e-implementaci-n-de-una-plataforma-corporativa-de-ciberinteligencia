@@ -1,3 +1,4 @@
+[[domain.png]]
 # 🛠️ Manual Técnico: Despliegue de OpenCTI en Proxmox
 | **Variable**   | **Valor / Descripción**                                  |
 | :------------- | :------------------------------------------------------- |
@@ -233,7 +234,7 @@ Yo lo configure en el 3334, para el dashboard de opencti, los otros puertos 3335
   
 # 📊  Diagrama de Flujo instalación mínima operativa
 ```mermaid
-graph RL
+graph LR
     A[Inicio: VM Proxmox] --> B[Instalar Debian & Docker]
     B --> C[Configurar Usuario Servicio]
     C --> D[Desplegar OpenCTI Core]
