@@ -38,7 +38,7 @@ Antes de iniciar, confirmar disponibilidad de recursos en el nodo Proxmox:
 Pasos críticos durante la instalación de Debian:
 
 - [x] **Configuración Regional:** Idioma, ubicación y teclado.
-- [ ] **Red:** Dominio local (ej. `home.lab` o dejar en blanco).
+- [ ] **Red:** Dominio local (o dejar en blanco).
 - [x] **Usuarios:**
     - `root`: Establecer contraseña robusta.
     - Usuario no-root: Crear usuario (ej. `manu`) y contraseña para entrada por ssh.

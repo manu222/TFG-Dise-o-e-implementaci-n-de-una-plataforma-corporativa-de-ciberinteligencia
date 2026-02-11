@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#📊",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -74,8 +74,7 @@
               "title": "Marcadores"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -206,7 +205,7 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "c3829bd87c95e98e",
+  "active": "a81af68fcb7121e0",
   "lastOpenFiles": [
     "Pasted image 20260210231252.png",
     "TFG/OpenCTI.md",
