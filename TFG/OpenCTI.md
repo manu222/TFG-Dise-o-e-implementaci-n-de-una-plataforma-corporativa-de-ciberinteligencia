@@ -10,11 +10,6 @@
 
 ---
 
-## 📑 Tabla de Contenidos
-
-
----
-
 ## 1. Requisitos del Sistema
 Antes de iniciar, confirmar disponibilidad de recursos en el nodo Proxmox:
 
@@ -160,6 +155,7 @@ SMTP_HOSTNAME=opencti #tambien $(hostname)
 ```Bash
 docker-compose up -d
 ```
+## 5. Configuración SSH
 
 > [!IMPORTANT]
 >En este punto no hay conectores ni información pero queremos ver si va asi que crearemos túneles usando **`termius`** pasando por la maquina **`router`** previamente configurada, tambien se puede hacer con la terminal local con un correcto funcionamiento del uso de claves *`publicas-privadas`* y configuración del archivo *`config`* de ssh, a continuación se explica la manera manual, termius es muy intuitivo
@@ -229,10 +225,91 @@ http://localhost:puerto_en_donde_tengamos_el_forward
 
 Yo lo configure en el 3334, para el dashboard de opencti, los otros puertos 3335 y 3336 son para monitorizar rabbit por interfaz y ver configuraciones de la base de datos de elasticsearch
 
+![Pantalla Login](../imgs-openctiDOC/DashboardCTI.png)
+
 > [!WARNING]  
 > Me quedo de momento por aqui, EXPLICAR AGREGACION DE CONECTORES OFICIALES
-  
-# 📊  Diagrama de Flujo instalación mínima operativa
+
+## 6. Como añadir conectores
+
+Para añadir conectores lo que deberemos hacer es crear 1 usuario por cada conector que queramos añadir, asi sabremos que conector añade que información, para los conectores oficiales luego de crearles el usuario correspondiente en la plataforma
+1. Parámetros
+2. Seguridad
+3. Usuarios
+4. Crear Usuario
+5. Rellenar según conveniencia
+6. Añadir a Grupo conectores
+
+Una vez creado el usuario en la plataforma para el conector que queramos deberemos añadir su bloque al docker-compose.yml (Aclarar que es posible tener el compose del Core y el de los conectores separados siempre que usen la misma red de Docker), para los oficiales, el bloque se encuentra en el repositorio oficial [RepoOpenCTI](https://github.com/OpenCTI-Platform/connectors/tree/master)
+
+Para este ejemplo usare el conector de AlienVaultOTX
+
+```yml
+  connector-alienvault:
+    image: opencti/connector-alienvault:6.9.6
+    environment:
+      # Conexión con el Core
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${ALIENVAULT_USER_TOKEN}
+      # Identidad del Conector
+      - CONNECTOR_ID=${CONNECTOR_ALIENVAULT_ID}
+      - CONNECTOR_NAME=AlienVault
+      - CONNECTOR_SCOPE=alienvault
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_DURATION_PERIOD=PT30M
+      # Configuración específica de AlienVault
+      - ALIENVAULT_BASE_URL=https://otx.alienvault.com
+      - ALIENVAULT_API_KEY=${ALIENVAULT_API_KEY}
+      - ALIENVAULT_TLP=White
+      - ALIENVAULT_CREATE_OBSERVABLES=true
+      - ALIENVAULT_CREATE_INDICATORS=true
+      # Importante: traerá datos desde el 1 de Enero de 2026 en adelante (Acordarme de cambiar esto a un script para ultimos 30 dias luego del primer import)
+      - ALIENVAULT_PULSE_START_TIMESTAMP=2026-01-01T00:00:00
+      - ALIENVAULT_REPORT_TYPE=threat-report
+      - ALIENVAULT_REPORT_STATUS=New
+      - ALIENVAULT_GUESS_MALWARE=false
+      - ALIENVAULT_GUESS_CVE=false
+      - ALIENVAULT_EXCLUDED_PULSE_INDICATOR_TYPES=FileHash-MD5,FileHash-SHA1
+      - ALIENVAULT_ENABLE_RELATIONSHIPS=true
+      - ALIENVAULT_ENABLE_ATTACK_PATTERNS_INDICATES=true
+      - ALIENVAULT_FILTER_INDICATORS=false
+      # Puntuaciones (Scoring)
+      - ALIENVAULT_DEFAULT_X_OPENCTI_SCORE=50
+      - ALIENVAULT_X_OPENCTI_SCORE_IP=60
+      - ALIENVAULT_X_OPENCTI_SCORE_DOMAIN=70
+      - ALIENVAULT_X_OPENCTI_SCORE_HOSTNAME=75
+      - ALIENVAULT_X_OPENCTI_SCORE_EMAIL=70
+      - ALIENVAULT_X_OPENCTI_SCORE_FILE=80
+      - ALIENVAULT_X_OPENCTI_SCORE_URL=80
+      - ALIENVAULT_X_OPENCTI_SCORE_MUTEX=60
+      - ALIENVAULT_X_OPENCTI_SCORE_CRYPTOCURRENCY_WALLET=80
+    restart: always
+    # Conectamos este servicio a la red opencti_net
+    networks:
+      - opencti_net
+```
+
+Es importante que estos valores estén en nuestro .env anteriormente mencionado
+
+${ALIENVAULT_USER_TOKEN} --> Es el Token de usuario que hay en el perfil del usuario del conector creado anteriormente
+${CONNECTOR_ALIENVAULT_ID} --> Esto es un uuid que tendremos que generar
+${ALIENVAULT_API_KEY} --> Esta es la API KEY del conector (Algunos conectores la exigen y habrá que obtenerla) [Link](https://otx.alienvault.com/api)
+
+Una vez guardado los cambios en estos dos archivos, tendremos que reiniciar el docker-compose.yml (El de los conectores o el del core dependiendo de arquitectura)
+
+```bash
+#Para reiniciar
+docker compose up -d
+#para ver logs y asegurar funcionamiento, todo en la misma carpeta seria el NAME connector-alienvault 
+docker logs -f NAME_DEL_CONECTOR
+```
+
+	1. OpenCTI
+	2. Datos->Ingestión
+![Pantalla Login](../imgs-openctiDOC/AlienVaultRunning.png)
+
+
+# Diagrama de Flujo instalación mínima operativa (OpenCTI sin info)
 ```mermaid
 graph LR
     A[Inicio: VM Proxmox] --> B[Instalar Debian & Docker]
