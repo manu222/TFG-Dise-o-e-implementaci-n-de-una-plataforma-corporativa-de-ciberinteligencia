@@ -8,12 +8,8 @@
 | **Red LAN**        | 10.0.0.0/24 (Laboratorio CTI)                                                  |
 | Túnel address WG** | 10.10.10.1/24                                                                  |
 | **Objetivo**       | Proveer acceso remoto cifrado y seguro a la red ademas de actuar como firewall |
-```table-of-contents
-
-```
 
 ---
-
 # Tabla de Contenidos
 
 1. [Requisitos y Preparación de la VM](#1-requisitos)
@@ -27,17 +23,6 @@
 6. [Configuración del Cliente (Ejemplo)](#6-configuracion-cliente)
 7. [DNS-Override](#7-DNS-Override)
 8.  [Arquitectura](#8-diagrama-arquitectura)
-```toc
-title: 
-style: nestedList # TOC style (nestedList|nestedOrderedList|inlineFirstLevel)
-minLevel: 0 # Include headings from the specified level
-maxLevel: 0 # Include headings up to the specified level
-include: 
-exclude: 
-includeLinks: true # Make headings clickable
-hideWhenEmpty: false # Hide TOC if no headings are found
-debugInConsole: false # Print debug info in Obsidian console
-```
 ---
 
 ## 1. Requisitos y Preparación de la VM <a id="1-requisitos"></a>
