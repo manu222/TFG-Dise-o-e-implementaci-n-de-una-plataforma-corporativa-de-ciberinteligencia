@@ -9,7 +9,7 @@
 3. [Diagrama de Enrutamiento y Forwarding](#diagrama-enrutamiento-y-forwarding)
    
 ---
->[!INFO]
+>[!WARNING]
 > El uso de esta maquina es exclusivamente para antes de tener OPNsense, cuando tengamos OPNsense dejara de ser util y sera sustituida por esta mencionada anteriormente 
 > 
 ## 1. Creación VM Proxmox
