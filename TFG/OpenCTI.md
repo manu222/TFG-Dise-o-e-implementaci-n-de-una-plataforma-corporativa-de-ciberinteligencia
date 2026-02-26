@@ -1,7 +1,7 @@
 ```toc
 
 ```
-# 🛠️ Manual Técnico: Despliegue de OpenCTI en Proxmox
+# Manual Técnico: Despliegue de OpenCTI en Proxmox
 | **Variable**   | **Valor / Descripción**                                  |
 | :------------- | :------------------------------------------------------- |
 | **Plataforma** | Proxmox VE                                               |
@@ -12,7 +12,7 @@
 
 ---
 
-## 1. Requisitos del Sistema
+## Requisitos del Sistema
 Antes de iniciar, confirmar disponibilidad de recursos en el nodo Proxmox:
 
 | Recurso   | Recomendado (Doc) | Configuración Autor | Configuración Final |
