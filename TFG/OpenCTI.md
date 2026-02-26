@@ -1,9 +1,4 @@
-## Tabla de contenidos
 
-- [Manual Técnico: Despliegue de OpenCTI en Proxmox](#manual-técnico-despliegue-de-opencti-en-proxmox)
-  - [Requisitos del Sistema](#requisitos-del-sistema)
-  - [Creación y Configuración de la VM](#creación-y-configuración-de-la-vm)
-- [Diagrama de Flujo](#diagrama-de-flujo)
 # 🛠️ Manual Técnico: Despliegue de OpenCTI en Proxmox
 | **Variable**   | **Valor / Descripción**                                  |
 | :------------- | :------------------------------------------------------- |
@@ -14,6 +9,20 @@
 | **Objetivo**   | Despliegue de plataforma Cyber Threat Intelligence (CTI) |
 
 ---
+
+# Tabla de contenidos
+
+1. [Requisitos del Sistema](#1-requisitos-del-sistema)
+2. [Creación y Configuración de la VM](#2-creación-y-configuración-de-la-vm)
+3. [Instalación del Sistema Operativo (Debian)](#3-instalación-del-sistema-operativo-en-la-maquina-de-open-cti)
+    - [3.1 Post-Creación VM: Habilitar Sudo](#31-post-creación-vm-habilitar-sudo)
+4. [Instalación de OpenCTI](#4-instalación-de-opencti)
+    - [4.1 Preparación del Entorno](#41-preparación-del-entorno)
+    - [4.2 Instalación de Docker Engine](#42-instalación-de-docker-engine)
+    - [4.3 Despliegue del Stack](#43-despliegue-del-stack)
+5. [Configuración SSH y Acceso Seguro](#5-configuración-ssh)
+6. [Añadir y Configurar Conectores](#6-como-añadir-conectores)
+7. [Diagrama de Flujo – Instalación Mínima Operativa](#diagrama-de-flujo-instalación-mínima-operativa-opencti-sin-info)
 
 ## 1. Requisitos del Sistema
 Antes de iniciar, confirmar disponibilidad de recursos en el nodo Proxmox:
