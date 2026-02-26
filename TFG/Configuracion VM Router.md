@@ -1,4 +1,4 @@
->[!INFO] El uso de esta maquina es exclusivamente para antes de tener OPNsense, cuando tengamos OPNsense dejara de ser util y sera sustituida por esta mencionada anteriormente 
+>[!Warning] El uso de esta maquina es exclusivamente para antes de tener OPNsense, cuando tengamos OPNsense dejara de ser util y sera sustituida por esta mencionada anteriormente 
 
 
 # Tabla de contenidos
