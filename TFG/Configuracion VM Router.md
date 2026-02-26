@@ -2,6 +2,16 @@
 >El uso de esta maquina es exclusivamente para antes de tener OPNsense, cuando tengamos OPNsense dejara de ser util y sera sustituida por esta mencionada anteriormente 
 >
 
+# Tabla de contenidos
+1. [Creación VM Proxmox](#1-creación-vm-proxmox)
+2. [Configuración de Red](#2-configuración-red)
+    - [2.1 nftables – Reglas de NAT y Forwarding](#etcnftablesconf)
+    - [2.2 Habilitar IP Forwarding (sysctl)](#etcsysctlconf)
+    - [2.3 Configuración de Interfaces (Netplan)](#etcnetplan01-netcfgyaml)
+    - [2.4 Verificación del Estado de Interfaces (ip addr)](#ip-addr-verificación-de-estado)
+3. [Diagrama de Enrutamiento y Forwarding](#diagrama-enrutamiento-y-forwarding)
+   
+---
 ## 1. Creación VM Proxmox
 
 ![Pantalla Login](../imgs-router/conf_vm_router.png)
