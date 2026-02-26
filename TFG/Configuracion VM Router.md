@@ -1,16 +1,10 @@
+>[!INFO]
+>El uso de esta maquina es exclusivamente para antes de tener OPNsense, cuando tengamos OPNsense dejara de ser util y sera sustituida por esta mencionada anteriormente 
+>
 
-# To-Do List
+## 1. Creación VM Proxmox
 
-- [ ] Creación VM machine en proxmox
-- [ ] Config forward
-- [ ] Config NAT
-- [ ] Claves ssh
-- [ ] NetConfig
-
-
-## 1. Creación VM proxmox
-
-
+![Pantalla Login](../imgs-router/conf_vm_router.png)
 
 ## 2. Configuración Red
 
@@ -162,12 +156,12 @@ Este comando muestra la realidad actual de las interfaces tras aplicar la config
 ## Diagrama enrutamiento y forwarding
 
 ```mermaid
-graph TD
+graph LR
     subgraph Internet
         ISP[ISP Gateway<br>145.239.16.254]
     end
 
-    subgraph "Router VM (Tu Configuración)"
+    subgraph "Router VM"
         WAN[ens19<br>145.239.16.147]
         Kernel[("sysctl: ip_forward=1<br>nftables: NAT Masquerade")]
         LAN_IF[ens18<br>10.0.0.1]

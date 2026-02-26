@@ -27,16 +27,30 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "TFG/Bibliografia.md",
+                "file": "TFG/OPNsense.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Bibliografia"
+              "title": "OPNsense"
+            }
+          },
+          {
+            "id": "5b08bd1b6f207e77",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "TFG/OPNsense.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "OPNsense"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -220,28 +234,30 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "5b6cc7ff1c0da2d1",
+  "active": "5b08bd1b6f207e77",
   "lastOpenFiles": [
-    "TFG/Infra/Network/FireWalling.md",
-    "TFG/Bibliografia.md",
-    "TFG/Configuración VM Router.md",
-    "imgs-router/nftables.jpeg",
-    "imgs-router/netcfg.png",
-    "TFG/Infra/Network/NET.md",
-    "TFG/Infra/1. Arquitectura de Red Propuesta.md",
-    "TFG/MISC.md",
-    "TFG/DUDAS.md",
-    "Pasted image 20251220200744.png",
-    "Pasted image 20251220185802.png",
-    "Pasted image 20251220184358.png",
-    "Pasted image 20251220200644.png",
-    "netcfg.png",
-    "Pasted image 20251220200806.png",
-    "Pasted image 20251220200818.png",
-    "Pasted image 20251220200842.png",
     "TFG/OpenCTI.md",
-    "imgs-router",
+    "TFG/MISC.md",
+    "TFG/Configuracion VM Router.md",
+    "TFG/OPNsense.md",
+    "TFG/Infra/1. Arquitectura de Red Propuesta.md",
+    "Pasted image 20260226154954.png",
+    "imgs-OPNsense/DNS-override.png",
+    "imgs-OPNsense/regla-udp.png",
+    "imgs-OPNsense/opnsense-NICS-test.png",
+    "imgs-OPNsense/proxmox_opnsense.png",
+    "imgs-OPNsense/opnsense-WAN.png",
+    "imgs-OPNsense/opnsense-LAN.png",
+    "imgs-OPNsense/opnsense-generalinfo.png",
+    "imgs-OPNsense/opnsense-deploymenttype.png",
+    "domain.png",
+    "TFG/Infra/Network/NET.md",
+    "TFG/Infra/Network/FireWalling.md",
+    "imgs-OPNsense",
     "Nueva carpeta",
+    "TFG/Bibliografia.md",
+    "TFG/DUDAS.md",
+    "imgs-router",
     "imgs-openctiDOC",
     "TFG/Infra/Network",
     "TFG/Infra",

@@ -19,3 +19,4 @@
 19. https://unix.stackexchange.com/questions/283275/how-to-do-masquerading-with-nftables
 20. https://wiki-archlinux-org.translate.goog/title/Nftables?_x_tr_sl=en&_x_tr_tl=es&_x_tr_hl=es&_x_tr_pto=sge#:~:text=nftables%20comes%20with%20a%20simple,file%20when%20started%20or%20enabled
 21. https://oasis-open.github.io/cti-documentation/stix/intro.html
+22. https://www.wiz.io/academy/threat-intel/must-follow-threat-intel-feeds

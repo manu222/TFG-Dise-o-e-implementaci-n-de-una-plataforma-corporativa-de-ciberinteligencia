@@ -6,3 +6,6 @@
 ## Proxmox login
 ![[Pasted image 20251220184854.png]]
 ![[Pasted image 20251220185802.png]]
+
+
+

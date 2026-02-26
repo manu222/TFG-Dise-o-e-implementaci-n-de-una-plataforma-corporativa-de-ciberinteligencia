@@ -228,11 +228,11 @@ Yo lo configure en el 3334, para el dashboard de opencti, los otros puertos 3335
 ![Pantalla Login](../imgs-openctiDOC/DashboardCTI.png)
 
 > [!WARNING]  
-> Me quedo de momento por aqui, EXPLICAR AGREGACION DE CONECTORES OFICIALES
+> Puede que se añadan ciertos conectores que luego se eliminaran para no saturar el sistema, como es un laboratorio, lo importante es tener cierta cantidad de información relevante pero no queremos estar sobrecargando la base de datos que hará que nuestro procesador se pon a funcionar al limite de sus posibilidades 
 
 ## 6. Como añadir conectores
 
-Para añadir conectores lo que deberemos hacer es crear 1 usuario por cada conector que queramos añadir, asi sabremos que conector añade que información, para los conectores oficiales luego de crearles el usuario correspondiente en la plataforma
+Para añadir conectores lo que deberemos hacer es crear 1 usuario por cada conector que queramos añadir, asi sabremos que conector añade que información; para los conectores oficiales luego de crear el usuario correspondiente en la plataforma:
 1. Parámetros
 2. Seguridad
 3. Usuarios
@@ -293,7 +293,7 @@ Es importante que estos valores estén en nuestro .env anteriormente mencionado
 
 ${ALIENVAULT_USER_TOKEN} --> Es el Token de usuario que hay en el perfil del usuario del conector creado anteriormente
 ${CONNECTOR_ALIENVAULT_ID} --> Esto es un uuid que tendremos que generar
-${ALIENVAULT_API_KEY} --> Esta es la API KEY del conector (Algunos conectores la exigen y habrá que obtenerla) [Link](https://otx.alienvault.com/api)
+${ALIENVAULT_API_KEY} --> Esta es la API KEY del conector (Algunos conectores la exigen y habrá que obtenerla) [Link API OTX](https://otx.alienvault.com/api)
 
 Una vez guardado los cambios en estos dos archivos, tendremos que reiniciar el docker-compose.yml (El de los conectores o el del core dependiendo de arquitectura)
 
@@ -304,8 +304,9 @@ docker compose up -d
 docker logs -f NAME_DEL_CONECTOR
 ```
 
-	1. OpenCTI
-	2. Datos->Ingestión
+1. OpenCTI
+2. Datos->Ingestión
+
 ![Pantalla Login](../imgs-openctiDOC/AlienVaultRunning.png)
 
 
