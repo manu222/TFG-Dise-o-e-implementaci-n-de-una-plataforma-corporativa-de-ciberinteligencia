@@ -1,5 +1,6 @@
 [
   "obsidian-git",
   "mermaid-tools",
-  "automatic-table-of-contents"
+  "automatic-table-of-contents",
+  "obsidian-plugin-toc"
 ]

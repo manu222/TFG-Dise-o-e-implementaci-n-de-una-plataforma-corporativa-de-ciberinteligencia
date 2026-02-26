@@ -27,6 +27,19 @@
 6. [Configuración del Cliente (Ejemplo)](#6-configuracion-cliente)
 7. [DNS-Override](#7-DNS-Override)
 8.  [Arquitectura](#8-diagrama-arquitectura)
+# **Tabla de contenidos**
+
+1. [1. Requisitos y Preparación de la VM <a id="1-requisitos"></a>](#1-requisitos-y-preparaci%C3%B3n-de-la-vm-a-id1-requisitosa)
+2. [2. Instalación Base de OPNsense <a id="2-instalacion-base"></a>](#2-instalaci%C3%B3n-base-de-opnsense-a-id2-instalacion-basea)
+3. [3. Configuración Inicial de Red <a id="3-configuracion-red"></a>](#3-configuraci%C3%B3n-inicial-de-red-a-id3-configuracion-reda)
+4. [4. Instalación y Configuración de WireGuard <a id="4-configuracion-wireguard"></a>](#4-instalaci%C3%B3n-y-configuraci%C3%B3n-de-wireguard-a-id4-configuracion-wireguarda)
+	1. [4.1 Habilitar el Servicio <a id="41-habilitar-servicio"></a>](#41-habilitar-el-servicio-a-id41-habilitar-servicioa)
+	2. [4.2 Configurar la Instancia Local (Servidor) <a id="42-instancia-local"></a>](#42-configurar-la-instancia-local-servidor-a-id42-instancia-locala)
+	3. [4.3 Configurar los Peers (Clientes) <a id="43-configurar-peers"></a>](#43-configurar-los-peers-clientes-a-id43-configurar-peersa)
+5. [5. Reglas de Firewall y NAT <a id="5-reglas-firewall"></a>](#5-reglas-de-firewall-y-nat-a-id5-reglas-firewalla)
+6. [6. Configuración del Cliente (Ejemplo Windows/Linux) <a id="6-configuracion-cliente"></a>](#6-configuraci%C3%B3n-del-cliente-ejemplo-windowslinux-a-id6-configuracion-clientea)
+7. [7. DNS Override  <a id="7-DNS-Override"></a>](#7-dns-override--a-id7-dns-overridea)
+8. [8. Arquitectura  <a id="8-diagrama-arquitectura"></a>](#8-arquitectura--a-id8-diagrama-arquitecturaa)
 
 ---
 
