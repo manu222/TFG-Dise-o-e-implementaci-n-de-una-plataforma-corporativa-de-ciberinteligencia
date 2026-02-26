@@ -8,7 +8,9 @@
 | **Red LAN**        | 10.0.0.0/24 (Laboratorio CTI)                                                  |
 | Túnel address WG** | 10.10.10.1/24                                                                  |
 | **Objetivo**       | Proveer acceso remoto cifrado y seguro a la red ademas de actuar como firewall |
+```table-of-contents
 
+```
 
 ---
 
