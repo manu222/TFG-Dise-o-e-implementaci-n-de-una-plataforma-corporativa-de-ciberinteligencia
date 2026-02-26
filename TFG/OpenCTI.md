@@ -1,4 +1,6 @@
+```toc
 
+```
 # 🛠️ Manual Técnico: Despliegue de OpenCTI en Proxmox
 | **Variable**   | **Valor / Descripción**                                  |
 | :------------- | :------------------------------------------------------- |
