@@ -27,7 +27,7 @@
 6. [Configuración del Cliente (Ejemplo)](#6-configuracion-cliente)
 7. [DNS-Override](#7-DNS-Override)
 8.  [Arquitectura](#8-diagrama-arquitectura)
-```table-of-contents
+```toc
 title: 
 style: nestedList # TOC style (nestedList|nestedOrderedList|inlineFirstLevel)
 minLevel: 0 # Include headings from the specified level
