@@ -39,6 +39,8 @@ OPNsense actuará como el router perimetral y servidor VPN de la infraestructura
 | **RAM**        | 2 GiB                     | Suficiente para enrutamiento y WireGuard.                                        |
 | **Disco**      | 25 GB                     | Tipo de bus: `VirtIO Block`.                                                     |
 | **Red (NICs)** | 2 Interfaces              | `net0` (WAN/Bridge Externo), `net1` (LAN/Bridge Interno). Modelo: `intel E1000`. |
+
+
 ![Proxmox Config](../imgs-OPNsense/proxmox_opnsense.png)
 
 - [x] Descargar la imagen ISO de OPNsense (arquitectura amd64, versión `dvd`).
