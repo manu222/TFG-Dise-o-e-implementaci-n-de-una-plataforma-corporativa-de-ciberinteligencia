@@ -1,6 +1,5 @@
->[!INFO]
->El uso de esta maquina es exclusivamente para antes de tener OPNsense, cuando tengamos OPNsense dejara de ser util y sera sustituida por esta mencionada anteriormente 
->
+>[!INFO]El uso de esta maquina es exclusivamente para antes de tener OPNsense, cuando tengamos OPNsense dejara de ser util y sera sustituida por esta mencionada anteriormente 
+
 
 # Tabla de contenidos
 1. [Creación VM Proxmox](#1-creación-vm-proxmox)
