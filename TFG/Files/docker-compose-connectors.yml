@@ -1,0 +1,316 @@
+name: opencti_connectors
+# Definimos que vamos a usar la red externa creada por el Core
+networks:
+  opencti_net:
+    external: true
+
+####################################################
+#  ██╗███╗   ██╗ ██████╗ ███████╗ ███████╗████████╗#
+#  ██║████╗  ██║██╔════╝ ██╔════╝ ██╔════╝╚══██╔══╝#
+#  ██║██╔██╗ ██║██║  ███╗█████╗   ███████╗   ██║   #
+#  ██║██║╚██╗██║██║   ██║██╔══╝   ╚════██║   ██║   #
+#  ██║██║ ╚████║╚██████╔╝███████╗███████║    ██║   #
+#  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚══════╝    ╚═╝   #
+####################################################
+
+
+###################################################################
+#      _    _     ___ _____ _   _   __     __ _   _   _ _   _____ #
+#     / \  | |   |_ _| ____| \ | |  \ \   / // \ | | | | | |_   _|#
+#    / _ \ | |    | ||  _| |  \| |   \ \ / // _ \| | | | |   | |  #
+#   / ___ \| |___ | || |___| |\  |    \ V // ___ \ |_| | |___| |  #
+#  /_/   \_\_____|___|_____|_| \_|     \_/_/   \_\___/_____|_|_|  #
+###################################################################
+services:
+  connector-alienvault:
+    image: opencti/connector-alienvault:6.9.22
+    environment:
+      # Conexión con el Core
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${ALIENVAULT_USER_TOKEN}
+      # Identidad del Conector
+      - CONNECTOR_ID=${CONNECTOR_ALIENVAULT_ID}
+      - CONNECTOR_NAME=AlienVault
+      - CONNECTOR_SCOPE=alienvault
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_DURATION_PERIOD=PT30M
+      # Configuración específica de AlienVault
+      - ALIENVAULT_BASE_URL=https://otx.alienvault.com
+      - ALIENVAULT_API_KEY=${ALIENVAULT_API_KEY}
+      - ALIENVAULT_TLP=White
+      - ALIENVAULT_CREATE_OBSERVABLES=true
+      - ALIENVAULT_CREATE_INDICATORS=true
+      # Importante: traerá datos desde el 1 de Enero de 2026 en adelante
+      - ALIENVAULT_PULSE_START_TIMESTAMP=2026-01-01T00:00:00
+      - ALIENVAULT_REPORT_TYPE=threat-report
+      - ALIENVAULT_REPORT_STATUS=New
+      - ALIENVAULT_GUESS_MALWARE=false
+      - ALIENVAULT_GUESS_CVE=false
+      - ALIENVAULT_EXCLUDED_PULSE_INDICATOR_TYPES=FileHash-MD5,FileHash-SHA1
+      - ALIENVAULT_ENABLE_RELATIONSHIPS=true
+      - ALIENVAULT_ENABLE_ATTACK_PATTERNS_INDICATES=true
+      - ALIENVAULT_FILTER_INDICATORS=false
+      # Puntuaciones (Scoring)
+      - ALIENVAULT_DEFAULT_X_OPENCTI_SCORE=50
+      - ALIENVAULT_X_OPENCTI_SCORE_IP=60
+      - ALIENVAULT_X_OPENCTI_SCORE_DOMAIN=70
+      - ALIENVAULT_X_OPENCTI_SCORE_HOSTNAME=75
+      - ALIENVAULT_X_OPENCTI_SCORE_EMAIL=70
+      - ALIENVAULT_X_OPENCTI_SCORE_FILE=80
+      - ALIENVAULT_X_OPENCTI_SCORE_URL=80
+      - ALIENVAULT_X_OPENCTI_SCORE_MUTEX=60
+      - ALIENVAULT_X_OPENCTI_SCORE_CRYPTOCURRENCY_WALLET=80
+    restart: always
+    # Conectamos este servicio a la red opencti_net
+    networks:
+      - opencti_net
+#########################################
+#   ____ __     __ _____                #
+#  / ___|\ \   / /| ____|               #
+# | |     \ \ / / |  _|                 #
+# | |___   \ V /  | |___                #
+#  \____|   \_/   |_____|               #
+#########################################
+  connector-cve:
+    image: opencti/connector-cve:6.9.22
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${CVE_NVD_USER_TOKEN} # Token de usuario para ver los logs 
+      - CONNECTOR_ID=${CONNECTOR_CVE_NVD_ID}
+      - CONNECTOR_TYPE=EXTERNAL_IMPORT
+      - CONNECTOR_NAME=Common Vulnerabilities and Exposures
+      - CONNECTOR_SCOPE=identity,vulnerability
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_DURATION_PERIOD=PT6H # Ejecutar cada 6 horas
+      - CVE_IMPORT_HISTORY=true
+      - CVE_API_KEY=${CVE_NVD_API_KEY}
+      - CVE_HISTORY_START_YEAR=2010 # Para no descargar internet entero, empieza por este año
+      - CVE_MIN_SCORE=0
+    restart: always
+    networks:
+      - opencti_net
+###############################
+#   ____ ___ ____    _        #
+#  / ___|_ _/ ___|  / \       #
+# | |    | |\___ \ / _ \      #
+# | |___ | | ___) / ___ \     #
+#  \____|___|____/_/   \_\    #
+###############################
+  connector-cisa:
+    image: opencti/connector-cisa-known-exploited-vulnerabilities:6.9.22
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${CISA_USER_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_CISA_ID}
+      - CONNECTOR_TYPE=EXTERNAL_IMPORT
+      - CONNECTOR_NAME=CISA Known Exploited Vulnerabilities
+      - CONNECTOR_SCOPE=identity,vulnerability,course-of-action,software
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_DURATION_PERIOD=P1D # Se ejecuta solo 1 vez al día
+    restart: always
+    networks:
+      - opencti_net
+##############################################################
+#  _____ _   _ ____  _____    _  _____ _____ _____  __       #
+# |_   _| | | |  _ \| ____|  / \|_   _|  ___/ _ \ \/ /       #
+#   | | | |_| | |_) |  _|   / _ \ | | | |_ | | | \  /        #
+#   | | |  _  |  _ <| |___ / ___ \| | |  _|| |_| /  \        #
+#   |_| |_| |_|_| \_\_____/_/   \_\_| |_|   \___/_/\_\       #
+##############################################################
+  connector-threatfox:
+    image: opencti/connector-threatfox:6.9.22
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${THREATFOX_USER_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_THREATFOX_TOKEN}
+      - CONNECTOR_TYPE=EXTERNAL_IMPORT
+      - CONNECTOR_NAME=Abuse.ch ThreatFox
+      - CONNECTOR_SCOPE=ipv4-addr,ipv6-addr,domain,url,file,malware,indicator
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_DURATION_PERIOD=P1D
+      - THREATFOX_INTERVAL=1
+      - THREATFOX_IMPORT_WITH_TAGS=true
+    restart: always
+    networks:
+      - opencti_net
+##############################################################
+#  _   _ ____  _     _   _    _    _   _ ____                #
+# | | | |  _ \| |   | | | |  / \  | | | / ___|               #
+# | | | | |_) | |   | |_| | / _ \ | | | \___ \               #
+# | |_| |  _ <| |___|  _  |/ ___ \| |_| |___) |              #
+#  \___/|_| \_\_____|_| |_/_/   \_\___/|____/                #
+#                                                            #
+##############################################################
+
+  connector-urlhaus:
+    image: opencti/connector-urlhaus:6.9.22
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${URLHAUS_USER_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_URLHAUS_TOKEN}
+      - CONNECTOR_TYPE=EXTERNAL_IMPORT
+      - CONNECTOR_NAME=Abuse.ch URLhaus
+      - CONNECTOR_SCOPE=url,domain,hostname
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_RUN_AND_TERMINATE=false
+      - CONNECTOR_DURATION_PERIOD=PT4H # Se ejecuta cada 4 horas
+      - URLHAUS_INTERVAL=4 # Fallback para la versión antigua
+      - URLHAUS_IMPORT_TAGS=true
+      - URLHAUS_CSV_URL=https://urlhaus.abuse.ch/downloads/csv_recent/
+    restart: always
+    networks:
+      - opencti_net
+#########################################################################################################
+# |  \/  |   /\   | |\ \        / /\   |  __ \|  ____| |  _ \   /\    |___  /   /\        /\   |  __ \   #
+# | \  / |  /  \  | | \ \  /\  / /  \  | |__) | |__    | |_) | /  \      / /   /  \      /  \  | |__) |  #
+# | |\/| | / /\ \ | |  \ \/  \/ / /\ \ |  _  /|  __|   |  _ < / /\ \    / /   / /\ \    / /\ \ |  _  /   #
+# | |  | |/ ____ \| |___\  /\  / ____ \| | \ \| |____  | |_) / ____ \  / /__ / ____ \  / ____ \| | \ \   #
+# |_|  |_/_/    \_\______\/  \/_/    \_\_|  \_\______| |____/_/    \_\/_____/_/    \_\/_/    \_\_|  \_\  #
+##########################################################################################################
+
+  connector-malwarebazaar:
+    image: opencti/connector-malwarebazaar:6.9.22
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${MALWAREBAZAAR_USER_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_MALWAREBAZAAR_TOKEN}
+      - CONNECTOR_TYPE=EXTERNAL_IMPORT
+      - CONNECTOR_NAME=MalwareBazaar
+      - CONNECTOR_SCOPE=StixFile,Artifact
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_DURATION_PERIOD=PT4H # Cada 4 horas
+      - MALWAREBAZAAR_API_KEY=${ABUSECH_API_KEY}
+      - MALWAREBAZAAR_INTERVAL=1
+    restart: always
+    networks:
+      - opencti_net
+##############################################################################################################
+#   _____ _    _  _____ _______ ____  __  __     __  __ _    _ _   _______ _____ ______ ______ ______ _____  #
+#  / ____| |  | |/ ____|__   __/ __ \|  \/  |   |  \/  | |  | | | |__   __|_   _|  ____|  ____|  ____|  __ \ #
+# | |    | |  | | (___    | | | |  | | \  / |   | \  / | |  | | |    | |    | | | |__  | |__  | |__  | |  | |#
+# | |    | |  | |\___ \   | | | |  | | |\/| |   | |\/| | |  | | |    | |    | | |  __| |  __| |  __| | |  | |#
+# | |____| |__| |____) |  | | | |__| | |  | |   | |  | | |__| | |____| |   _| |_| |    | |____| |____| |__| |#
+#  \_____|\____/|_____/   |_|  \____/|_|  |_|   |_|  |_|\____/|______|_|  |_____|_|    |______|______|_____/ #
+##############################################################################################################
+
+  connector-multifeed:
+    build:
+      context: ../custom_connectors/multifeed
+    image: custom-connector-multifeed:latest
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${MULTIFEED_USER_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_MULTIFEED_TOKEN}
+      - CONNECTOR_TYPE=EXTERNAL_IMPORT
+      - CONNECTOR_NAME=TFG Multi-Feed
+      - CONNECTOR_SCOPE=malware,ipv4-addr,url,indicator
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_RUN_EVERY=14400
+    restart: always
+    networks:
+      - opencti_net
+
+
+######################################################################################
+# ███████╗███╗   ██╗██████╗ ██╗ ██████╗██╗  ██╗███╗   ███╗███████╗███╗   ██╗████████╗#
+# ██╔════╝████╗  ██║██╔══██╗██║██╔════╝██║  ██║████╗ ████║██╔════╝████╗  ██║╚══██╔══╝#
+# █████╗  ██╔██╗ ██║██████╔╝██║██║     ███████║██╔████╔██║█████╗  ██╔██╗ ██║   ██║   #
+# ██╔══╝  ██║╚██╗██║██╔══██╗██║██║     ██╔══██║██║╚██╔╝██║██╔══╝  ██║╚██╗██║   ██║   #
+# ███████╗██║ ╚████║██║  ██║██║╚██████╗██║  ██║██║ ╚═╝ ██║███████╗██║ ╚████║   ██║   #
+# ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   #
+######################################################################################
+
+#####################################################################
+#           ____  _    _  _____ ______ _____ _____  _____  ____     #
+#     /\   |  _ \| |  | |/ ____|  ____|_   _|  __ \|  __ \|  _ \    #
+#    /  \  | |_) | |  | | (___ | |__    | | | |__) | |  | | |_) |   #
+#   / /\ \ |  _ <| |  | |\___ \|  __|   | | |  ___/| |  | |  _ <    #
+#  / ____ \| |_) | |__| |____) | |____ _| |_| |    | |__| | |_) |   #
+# /_/    \_\____/ \____/|_____/|______|_____|_|    |_____/|____/    #
+#####################################################################
+
+  connector-abuseipdb:
+    image: opencti/connector-abuseipdb:6.9.22
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${ABUSEIPDB_USER_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_ABUSEIPDB_TOKEN}
+      - CONNECTOR_TYPE=INTERNAL_ENRICHMENT
+      - CONNECTOR_NAME=AbuseIPDB
+      - CONNECTOR_SCOPE=IPv4-Addr,IPv6-Addr
+      - CONNECTOR_AUTO=true
+      - CONNECTOR_LOG_LEVEL=info
+      - ABUSEIPDB_API_KEY=${ABUSEIPDB_API_KEY}
+      - ABUSEIPDB_SCORE_THRESHOLD=50 # Solo reporta si la confianza de abuso es mayor al 50%
+    restart: always
+    networks:
+      - opencti_net
+  connector-shodan:
+    image: opencti/connector-shodan:6.9.22
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${SHODAN_USER_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_SHODAN_TOKEN}
+      - CONNECTOR_TYPE=INTERNAL_ENRICHMENT
+      - CONNECTOR_NAME=Shodan
+      - CONNECTOR_SCOPE=IPv4-Addr,IPv6-Addr,Domain-Name
+      - CONNECTOR_AUTO=false # true = Enriquece todo lo que entre automáticante, lo dejo false no se limites de api
+      - CONNECTOR_LOG_LEVEL=error
+      - SHODAN_TOKEN=${SHODAN_API_KEY}
+      - SHODAN_MAX_RETRIES=3
+    restart: always
+    networks:
+      - opencti_net
+
+
+############################################
+#  / ____|  ____|  \/  |_   _| \ | |_   _| #
+# | |  __| |__  | \  / | | | |  \| | | |   #
+# | | |_ |  __| | |\/| | | | | . ` | | |   #
+# | |__| | |____| |  | |_| |_| |\  |_| |_  #
+#  \_____|______|_|  |_|_____|_| \_|_____| #
+############################################
+  connector-gemini:
+    build: ../custom_connectors/gemini_enrichment
+    image: opencti/connector-gemini:latest
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${GEMINI_USER_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_GEMINI_TOKEN}
+      - CONNECTOR_TYPE=INTERNAL_ENRICHMENT
+      - CONNECTOR_NAME=Gemini AI Analyst
+      - CONNECTOR_SCOPE=Malware,Indicator,Report,Attack-Pattern,Intrusion-Set,Tool
+      - CONNECTOR_AUTO=false
+      - CONNECTOR_CONFIDENCE_LEVEL=80
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=gemini-3-pro-preview
+      - GEMINI_TEMPERATURE=0.2
+      - GEMINI_MAX_TOKENS=2048
+    restart: always
+    networks:
+      - opencti_net
+
+#######################################################
+# ███████╗████████╗██████╗ ███████╗ █████╗ ███╗   ███╗#
+# ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██╔══██╗████╗ ████║#
+# ███████╗   ██║   ██████╔╝█████╗  ███████║██╔████╔██║#
+# ╚════██║   ██║   ██╔══██╗██╔══╝  ██╔══██║██║╚██╔╝██║#
+# ███████║   ██║   ██║  ██║███████╗██║  ██║██║ ╚═╝ ██║#
+# ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝#
+#######################################################                                                    
+  connector-stream:
+    build: ../custom_connectors/stream_exporter
+    image: opencti/connector-stream:latest
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_STREAM_TOKEN}
+      - CONNECTOR_TYPE=STREAM
+      - CONNECTOR_NAME=Real-time File Exporter
+      - STREAM_ID=${STREAM_ID}
+      - LOG_LEVEL=info
+    restart: always
+    networks:
+      - opencti_net
+    volumes:
+      - ./export_logs:/var/log

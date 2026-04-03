@@ -8,6 +8,7 @@
 | **Database**   | ElasticSearch + Redis + MinIO                            |
 | **Objetivo**   | Despliegue de plataforma Cyber Threat Intelligence (CTI) |
 
+
 ---
 
 # Tabla de contenidos
