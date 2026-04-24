@@ -243,7 +243,7 @@ Yo lo configure en el 3334, para el dashboard de opencti, los otros puertos 3335
 ![Pantalla Login](../imgs-openctiDOC/DashboardCTI.png)
 
 > [!WARNING]  
-> Puede que se añadan ciertos conectores que luego se eliminaran para no saturar el sistema, como es un laboratorio, lo importante es tener cierta cantidad de información relevante pero no queremos estar sobrecargando la base de datos que hará que nuestro procesador se pon a funcionar al limite de sus posibilidades 
+> Puede que se añadan ciertos conectores que luego se eliminaran para no saturar el sistema, como es un laboratorio, lo importante es tener cierta cantidad de información relevante pero no queremos estar sobrecargando la base de datos que hará que nuestro procesador se ponga funcionar al limite de sus posibilidades 
 
 ## 6. Como añadir conectores
 

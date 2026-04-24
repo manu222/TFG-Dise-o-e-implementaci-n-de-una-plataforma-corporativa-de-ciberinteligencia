@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Cobalt Strike C2 (Drb-Ra)",
+    "url": "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/refs/heads/master/C2_configs/cobaltstrike-30day.json",
+    "parser": "drb-json",
+    "interval": 3600,
+    "labels": ["cobalt-strike", "c2", "apt"]
+  },
+  {
+    "name": "PoshC2 (Drb-Ra)",
+    "url": "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/refs/heads/master/C2_configs/poshc2.json",
+    "parser": "drb-json",
+    "interval": 3600,
+    "labels": ["poshc2", "c2"]
+  },
+  {
+    "name": "OpenPhish Community",
+    "url": "https://openphish.com/feed.txt",
+    "parser": "text-list-url",
+    "interval": 3600,
+    "labels": ["phishing", "credential-theft"]
+  },
+  {
+    "name": "Tor Exit Nodes",
+    "url": "https://check.torproject.org/torbulkexitlist",
+    "parser": "text-list-ip",
+    "interval": 86400,
+    "labels": ["tor", "anonymization", "darkweb"]
+  }
+]

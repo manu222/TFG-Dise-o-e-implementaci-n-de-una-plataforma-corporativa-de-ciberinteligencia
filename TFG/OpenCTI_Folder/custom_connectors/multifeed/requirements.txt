@@ -1,0 +1,4 @@
+pycti==6.4.1
+stix2==3.0.1
+requests>=2.32.0
+ipaddress==1.0.23

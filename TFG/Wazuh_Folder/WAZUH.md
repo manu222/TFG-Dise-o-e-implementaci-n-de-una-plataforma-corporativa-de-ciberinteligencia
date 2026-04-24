@@ -62,3 +62,11 @@ Como la instalación es nativa, no usamos contenedores. Todos los servicios son 
 # Comprobar escucha de agentes (1514) y API (55000)
 sudo ss -tulpn | grep -E "1514|55000|443|9200"
 ```
+
+## 5. Agent installation for deb
+
+Sustituir a conveniencia las variables
+
+```bash
+wget https://packages.wazuh.com/4.x/apt/pool/main/w/wazuh-agent/wazuh-agent_4.14.4-1_amd64.deb && sudo WAZUH_MANAGER='wazuh.ryoiki' WAZUH_AGENT_GROUP='default' WAZUH_AGENT_NAME='Test' dpkg -i ./wazuh-agent_4.14.4-1_amd64.deb
+```

@@ -1,0 +1,91 @@
+name: opencti_connectors
+# Definimos que vamos a usar la red externa creada por el Core
+networks:
+  opencti_net:
+    external: true
+
+####################################################
+#  ██╗███╗   ██╗ ██████╗ ███████╗ ███████╗████████╗#
+#  ██║████╗  ██║██╔════╝ ██╔════╝ ██╔════╝╚══██╔══╝#
+#  ██║██╔██╗ ██║██║  ███╗█████╗   ███████╗   ██║   #
+#  ██║██║╚██╗██║██║   ██║██╔══╝   ╚════██║   ██║   #
+#  ██║██║ ╚████║╚██████╔╝███████╗███████║    ██║   #
+#  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚══════╝    ╚═╝   #
+####################################################
+
+
+###################################################################
+#      _    _     ___ _____ _   _   __     __ _   _   _ _   _____ #
+#     / \  | |   |_ _| ____| \ | |  \ \   / // \ | | | | | |_   _|#
+#    / _ \ | |    | ||  _| |  \| |   \ \ / // _ \| | | | |   | |  #
+#   / ___ \| |___ | || |___| |\  |    \ V // ___ \ |_| | |___| |  #
+#  /_/   \_\_____|___|_____|_| \_|     \_/_/   \_\___/_____|_|_|  #
+###################################################################
+services:
+  connector-alienvault:
+    image: opencti/connector-alienvault:6.9.22
+    environment:
+      # Conexión con el Core
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${ALIENVAULT_USER_TOKEN}
+      # Identidad del Conector
+      - CONNECTOR_ID=${CONNECTOR_ALIENVAULT_ID}
+      - CONNECTOR_NAME=AlienVault
+      - CONNECTOR_SCOPE=alienvault
+      - CONNECTOR_LOG_LEVEL=info
+      - CONNECTOR_DURATION_PERIOD=PT30M
+      # Configuración específica de AlienVault
+      - ALIENVAULT_BASE_URL=https://otx.alienvault.com
+      - ALIENVAULT_API_KEY=${ALIENVAULT_API_KEY}
+      - ALIENVAULT_TLP=White
+      - ALIENVAULT_CREATE_OBSERVABLES=true
+      - ALIENVAULT_CREATE_INDICATORS=true
+      # Importante: traerá datos desde el 1 de Enero de 2026 en adelante
+      - ALIENVAULT_PULSE_START_TIMESTAMP=2026-01-01T00:00:00
+      - ALIENVAULT_REPORT_TYPE=threat-report
+      - ALIENVAULT_REPORT_STATUS=New
+      - ALIENVAULT_GUESS_MALWARE=false
+      - ALIENVAULT_GUESS_CVE=false
+      - ALIENVAULT_EXCLUDED_PULSE_INDICATOR_TYPES=FileHash-MD5,FileHash-SHA1
+      - ALIENVAULT_ENABLE_RELATIONSHIPS=true
+      - ALIENVAULT_ENABLE_ATTACK_PATTERNS_INDICATES=true
+      - ALIENVAULT_FILTER_INDICATORS=false
+      # Puntuaciones (Scoring)
+      - ALIENVAULT_DEFAULT_X_OPENCTI_SCORE=50
+      - ALIENVAULT_X_OPENCTI_SCORE_IP=60
+      - ALIENVAULT_X_OPENCTI_SCORE_DOMAIN=70
+      - ALIENVAULT_X_OPENCTI_SCORE_HOSTNAME=75
+      - ALIENVAULT_X_OPENCTI_SCORE_EMAIL=70
+      - ALIENVAULT_X_OPENCTI_SCORE_FILE=80
+      - ALIENVAULT_X_OPENCTI_SCORE_URL=80
+      - ALIENVAULT_X_OPENCTI_SCORE_MUTEX=60
+      - ALIENVAULT_X_OPENCTI_SCORE_CRYPTOCURRENCY_WALLET=80
+    restart: always
+    # Conectamos este servicio a la red opencti_net
+    networks:
+      - opencti_net
+
+#######################################################
+# ███████╗████████╗██████╗ ███████╗ █████╗ ███╗   ███╗#
+# ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██╔══██╗████╗ ████║#
+# ███████╗   ██║   ██████╔╝█████╗  ███████║██╔████╔██║#
+# ╚════██║   ██║   ██╔══██╗██╔══╝  ██╔══██║██║╚██╔╝██║#
+# ███████║   ██║   ██║  ██║███████╗██║  ██║██║ ╚═╝ ██║#
+# ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝#
+#######################################################                                                    
+  connector-stream:
+    build: ../custom_connectors/stream_exporter
+    image: opencti/connector-stream:latest
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=${CONNECTOR_STREAM_TOKEN}
+      - CONNECTOR_TYPE=STREAM
+      - CONNECTOR_NAME=Real-time File Exporter
+      - STREAM_ID=${STREAM_ID}
+      - LOG_LEVEL=info
+    restart: always
+    networks:
+      - opencti_net
+    volumes:
+      - ./export_logs:/var/log
