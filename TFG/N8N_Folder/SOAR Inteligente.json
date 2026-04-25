@@ -1,0 +1,979 @@
+{
+  "name": "POC-2 v3 - SOAR Inteligente",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wazuh-poc2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        16
+      ],
+      "id": "489ce789-6481-446f-b867-be3aac56eae5",
+      "name": "Webhook",
+      "webhookId": "4d0b54e4-68a9-4fc1-9d23-f1b61a609a88"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://opnsense.ryoiki/api/firewall/alias_util/add/Bloqueo_SOAR",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"address\": \"{{ $json.ioc }}\"}",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        560,
+        224
+      ],
+      "id": "63d59c8b-9c72-48ce-aedc-d9769f0f0e8c",
+      "name": "OPNsense Auto Bloqueo",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "RkheGTxQRPAQOfN9",
+          "name": "opnsense n8n api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=🚨 **BLOQUEO AUTOMÁTICO** — `{{ $('Code in JavaScript1').item.json.ioc }}`\n\n> {{ $('Code in JavaScript1').item.json.resumen }}\n\n**Incidente**\n- {{ $('Code in JavaScript1').item.json.descripcion }}\n- Agente: `{{ $('Code in JavaScript1').item.json.agente }}` ({{ $('Code in JavaScript1').item.json.criticidad_agente }}) · Nivel {{ $('Code in JavaScript1').item.json.nivel }}/15 · {{ $('Code in JavaScript1').item.json.freq_txt }}\n- Origen: `{{ $('Code in JavaScript1').item.json.srcip }}` ({{ $('Code in JavaScript1').item.json.geo }}) · Usuario: `{{ $('Code in JavaScript1').item.json.srcuser }}`\n- {{ $('Code in JavaScript1').item.json.ventana_temporal }}\n\n**¿Por qué se bloqueó?**\n{{ $('Code in JavaScript1').item.json.motivo }}\n{{ $('Code in JavaScript1').item.json.opencti_txt }}\n\n[🔍 Revisar en Wazuh]({{ $('Code in JavaScript1').item.json.link_wazuh }}) · Regla `{{ $('Code in JavaScript1').item.json.regla_id }}`",
+        "options": {
+          "tts": false,
+          "username": "SOAR-AUTO"
+        },
+        "embeds": {
+          "values": [
+            {
+              "description": "Bloqueo automatico SOAR",
+              "author": "SOAR-n8n",
+              "color": "#FF4500",
+              "title": "🚨 IP BLOQUEADA AUTO"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        816,
+        80
+      ],
+      "id": "762a752c-825f-476d-ba26-7205a198e0e2",
+      "name": "Discord Auto Bloqueado",
+      "webhookId": "0d0d85ab-40bf-40c0-a6c5-afd304cf5f64",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "hF8D88aVeBSxjY8E",
+          "name": "Discord AutoBlock"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "manual-bloquear",
+                    "leftValue": "={{ $json.data[\"ACCION A REALIZAR\"] }}",
+                    "rightValue": "bloquear",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "manual-escalar",
+                    "leftValue": "={{ $json.data[\"ACCION A REALIZAR\"] }}",
+                    "rightValue": "escalar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "manual-cerrar",
+                    "leftValue": "={{ $json.data[\"ACCION A REALIZAR\"] }}",
+                    "rightValue": "cerrar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        464
+      ],
+      "id": "575d729c-de7d-42a7-9880-b9a88d8c77d0",
+      "name": "Switch Respuesta Manual"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://opnsense.ryoiki/api/firewall/alias_util/add/Bloqueo_SOAR",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"address\": \"{{ $('Code in JavaScript1').item.json.ioc }}\"}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1232,
+        304
+      ],
+      "id": "880199ba-ab2e-4d08-8d13-4e1fc4eb1fa9",
+      "name": "OPNsense Manual Bloqueo",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "RkheGTxQRPAQOfN9",
+          "name": "opnsense n8n api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "==✅ **BLOQUEO MANUAL EJECUTADO** — `{{ $('Code in JavaScript1').item.json.ioc }}`\n\nPor decisión del analista, IOC añadido al alias `Bloqueo_SOAR` en OPNsense.\n\n**Incidente:** {{ $('Code in JavaScript1').item.json.descripcion }}\n**Agente:** `{{ $('Code in JavaScript1').item.json.agente }}` ({{ $('Code in JavaScript1').item.json.criticidad_agente }})\n**Regla Wazuh:** `{{ $('Code in JavaScript1').item.json.regla_id }}` · Nivel {{ $('Code in JavaScript1').item.json.nivel }}/15\n**Decisión IA original:** {{ $('Code in JavaScript1').item.json.accion }} ({{ $('Code in JavaScript1').item.json.gravedad }})\n\n**🔗** [🛰️ Wazuh](<{{ $('Code in JavaScript1').item.json.link_wazuh }}>) · [🧠 OpenCTI](<{{ $('Code in JavaScript1').item.json.link_opencti }}>) · ⚔️ {{ $('Code in JavaScript1').item.json.link_mitre_txt }}",
+        "options": {
+          "tts": false,
+          "username": "SOAR-MANUAL"
+        },
+        "embeds": {
+          "values": [
+            {
+              "description": "Bloqueo manual confirmado",
+              "author": "SOAR-n8n",
+              "color": "#FFA500",
+              "title": "✅ Bloqueo Manual"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        304
+      ],
+      "id": "bd70003e-365f-4f4c-ab4d-ffc4d094b974",
+      "name": "Discord Bloqueo Manual",
+      "webhookId": "0d0d85ab-40bf-40c0-a6c5-afd304cf5f64",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "hF8D88aVeBSxjY8E",
+          "name": "Discord AutoBlock"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "==🚨 **ESCALACIÓN POR ANALISTA** 🚨 @here\n\n> {{ $('Code in JavaScript1').item.json.resumen }}\n\nEl analista ha decidido escalar manualmente tras revisión. Se requiere investigación profunda por Tier-2.\n\n**Incidente**\n- {{ $('Code in JavaScript1').item.json.descripcion }}\n- Agente: `{{ $('Code in JavaScript1').item.json.agente }}` ({{ $('Code in JavaScript1').item.json.criticidad_agente }}) · Nivel {{ $('Code in JavaScript1').item.json.nivel }}/15\n- Origen: `{{ $('Code in JavaScript1').item.json.srcip }}` — {{ $('Code in JavaScript1').item.json.geo }}\n- IOC: `{{ $('Code in JavaScript1').item.json.ioc }}` (`{{ $('Code in JavaScript1').item.json.ioc_type }}`)\n\n{{ $('Code in JavaScript1').item.json.context_txt }}\n\n**🔍 CTI:** {{ $('Code in JavaScript1').item.json.opencti_txt }}\nTécnicas: {{ $('Code in JavaScript1').item.json.attack_techs }}\n\n[🛰️ Wazuh](<{{ $('Code in JavaScript1').item.json.link_wazuh }}>) · [🧠 OpenCTI](<{{ $('Code in JavaScript1').item.json.link_opencti }}>) · ⚔️ {{ $('Code in JavaScript1').item.json.link_mitre_txt }}",
+        "options": {
+          "tts": false,
+          "username": "SOAR-ESCALACION"
+        },
+        "embeds": {
+          "values": [
+            {
+              "description": "Escalacion manual",
+              "author": "SOAR-n8n",
+              "color": "#FF8C00",
+              "title": "🟠 Escalacion Manual"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        480
+      ],
+      "id": "2f857924-d902-4a61-b155-e414d8e9b063",
+      "name": "Discord Escalacion Manual",
+      "webhookId": "0d0d85ab-40bf-40c0-a6c5-afd304cf5f64",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "yk7ceVtgPXjwiJKn",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=⚪ **Alerta cerrada por analista**\n\n> {{ $('Code in JavaScript1').item.json.resumen }}\n\n{{ $('Code in JavaScript1').item.json.context_txt }}\n\n**Alerta:** {{ $('Code in JavaScript1').item.json.descripcion }}\n**Regla Wazuh:** `{{ $('Code in JavaScript1').item.json.regla_id }}` · Nivel {{ $('Code in JavaScript1').item.json.nivel }}/15\n**Agente:** `{{ $('Code in JavaScript1').item.json.agente }}` · **Origen:** `{{ $('Code in JavaScript1').item.json.srcip }}`\n**Decisión IA original:** {{ $('Code in JavaScript1').item.json.accion }} ({{ $('Code in JavaScript1').item.json.gravedad }})",
+        "options": {
+          "tts": false,
+          "username": "SOAR-AUDIT"
+        },
+        "embeds": {
+          "values": [
+            {
+              "description": "Incidente cerrado",
+              "author": "SOAR-n8n",
+              "color": "#808080",
+              "title": "Incidente Cerrado"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        704
+      ],
+      "id": "2a6b3316-b188-4b62-97ce-cb73b29d08db",
+      "name": "Discord Cerrado",
+      "webhookId": "0d0d85ab-40bf-40c0-a6c5-afd304cf5f64",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "yk7ceVtgPXjwiJKn",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=⚪ **Alerta descartada por SOAR** · Regla `{{ $('Code in JavaScript1').item.json.regla_id }}` · Nivel {{ $('Code in JavaScript1').item.json.nivel }}/15\n\n{{ $('Code in JavaScript1').item.json.descripcion }}\nAgente: `{{ $('Code in JavaScript1').item.json.agente }}` · Origen: `{{ $('Code in JavaScript1').item.json.srcip }}` · {{ $('Code in JavaScript1').item.json.ventana_temporal }}\n\n**Motivo IA:** {{ $('Code in JavaScript1').item.json.motivo }}\n\n{{ $('Code in JavaScript1').item.json.context_txt }}\n\n[🔍 Revisar en Wazuh]({{ $('Code in JavaScript1').item.json.link_wazuh }}) · Regla `{{ $('Code in JavaScript1').item.json.regla_id }}`",
+        "options": {
+          "tts": false,
+          "username": "SOAR-AUDIT"
+        },
+        "embeds": {
+          "values": [
+            {
+              "description": "Alerta descartada",
+              "author": "SOAR-n8n",
+              "color": "#808080",
+              "title": "Registro Auditoria"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        752,
+        656
+      ],
+      "id": "a4b38893-0117-407e-9973-0d5a9aedd1da",
+      "name": "Discord Audit Ignorar",
+      "webhookId": "0d0d85ab-40bf-40c0-a6c5-afd304cf5f64",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "GorExHTYDbLcJYyw",
+          "name": "Discord ingnore"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=🚨 **ESCALACIÓN CRÍTICA — Tier-2** 🚨 @here\n\n> {{ $('Code in JavaScript1').item.json.resumen }}",
+        "options": {
+          "tts": false,
+          "username": "SOAR-CRITICO"
+        },
+        "embeds": {
+          "values": [
+            {
+              "description": "=**Severidad:** {{ $('Code in JavaScript1').item.json.gravedad.toUpperCase() }} · {{ $('Code in JavaScript1').item.json.ventana_temporal }}\n\n**Incidente**\n- {{ $('Code in JavaScript1').item.json.descripcion }}\n- Agente: `{{ $('Code in JavaScript1').item.json.agente }}` ({{ $('Code in JavaScript1').item.json.criticidad_agente }})\n- Categorías: `{{ $('Code in JavaScript1').item.json.grupos }}`\n- Frecuencia: {{ $('Code in JavaScript1').item.json.freq_txt }}\n- Origen: `{{ $('Code in JavaScript1').item.json.srcip }}` — {{ $('Code in JavaScript1').item.json.geo }}\n- Usuario: `{{ $('Code in JavaScript1').item.json.srcuser }}`\n\n**IOC detectado** (`{{ $('Code in JavaScript1').item.json.ioc_type }}`)\n`{{ $('Code in JavaScript1').item.json.ioc }}`\n\n**🧠 Análisis IA**\n**Motivo:** {{ $('Code in JavaScript1').item.json.motivo }}\n\n{{ $('Code in JavaScript1').item.json.context_txt }}\n\n**🔍 Inteligencia CTI**\n{{ $('Code in JavaScript1').item.json.opencti_txt }}\nTécnicas: {{ $('Code in JavaScript1').item.json.attack_techs }}\nTácticas: {{ $('Code in JavaScript1').item.json.mitre_tacts }}\n\n**🛡️ Mitigaciones sugeridas**\n{{ $('Code in JavaScript1').item.json.mitigaciones_txt }}\n\n**📋 Compliance**\n{{ $('Code in JavaScript1').item.json.compliance_txt }}\n\n**🔗 Investigación inmediata**\n[🛰️ Wazuh]({{ $('Code in JavaScript1').item.json.link_wazuh }}) · [🧠 OpenCTI]({{ $('Code in JavaScript1').item.json.link_opencti }}) · ⚔️ {{ $('Code in JavaScript1').item.json.link_mitre_txt }}",
+              "author": "SOAR-n8n",
+              "color": "#8B0000",
+              "title": "=Alerta {{ $('Code in JavaScript1').item.json.regla_id }} · Nivel {{ $('Code in JavaScript1').item.json.nivel }}/15"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        752,
+        816
+      ],
+      "id": "2f2c90f7-e40c-4d11-91d2-212fb3c4d19d",
+      "name": "Discord Escalacion Critica",
+      "webhookId": "0d0d85ab-40bf-40c0-a6c5-afd304cf5f64",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "VtI0hAgIxGJoRP3q",
+          "name": "Discord escalado"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════════════════════════╗\n// ║  EXTRACTOR DE IOCs — Wazuh → OpenCTI GraphQL                     ║\n// ║  Aplana la alerta Wazuh, extrae MITRE/IPs/CVEs/dominios/hashes    ║\n// ║  y construye una query GraphQL combinada para OpenCTI.            ║\n// ╚══════════════════════════════════════════════════════════════════╝\n\n// ─── 1. HELPER: aplanar objetos anidados ──────────────────────────\n// { rule:{ mitre:{ id:[\"T1110\",\"T1078\"] }}} → { \"rule.mitre.id[0]\":\"T1110\", \"rule.mitre.id[1]\":\"T1078\" }\nfunction flattenObject(obj, parentKey = '', result = {}) {\n  for (const key in obj) {\n    const newKey = parentKey ? `${parentKey}.${key}` : key;\n    const val = obj[key];\n    if (Array.isArray(val)) {\n      val.forEach((item, i) => {\n        if (item !== null && typeof item === 'object') {\n          flattenObject(item, `${newKey}[${i}]`, result);\n        } else {\n          result[`${newKey}[${i}]`] = item;\n        }\n      });\n    } else if (val !== null && typeof val === 'object') {\n      flattenObject(val, newKey, result);\n    } else {\n      result[newKey] = val;\n    }\n  }\n  return result;\n}\n\n// ─── 2. HELPER: validar IP pública enrutable ──────────────────────\nconst RE_IPV4       = /^(\\d{1,3}\\.){3}\\d{1,3}$/;\nconst PRIVATE_IPV4  = /^(10\\.|172\\.(1[6-9]|2\\d|3[01])\\.|192\\.168\\.|127\\.|169\\.254\\.|0\\.|255\\.255\\.255\\.255$)/;\nconst PRIVATE_IPV6  = /^(::1$|fe80:|fc00:|fd00:)/i;\n\nfunction isPublicIP(ip) {\n  if (!ip || typeof ip !== 'string') return false;\n  const t = ip.trim();\n  if (RE_IPV4.test(t)) {\n    // Valida rangos 0-255 en cada octeto\n    if (!t.split('.').every(o => +o >= 0 && +o <= 255)) return false;\n    return !PRIVATE_IPV4.test(t);\n  }\n  if (t.includes(':')) return !PRIVATE_IPV6.test(t);\n  return false;\n}\n\n// ─── 3. ────────────────────────────────────────────\n// Soporta múltiples formas de llegada: integración nativa Wazuh,\n// copia cruda desde OpenSearch/Kibana, respuesta completa de search API, etc.\n// El payload \"Wazuh-core\" siempre tiene .rule o .agent en la raíz.\nfunction unwrapWazuh(raw) {\n  const candidates = [\n    raw,\n    raw?.body,\n    raw?._source,\n    raw?.body?._source,\n    Array.isArray(raw)        ? raw[0]           : null,\n    Array.isArray(raw)        ? raw[0]?._source  : null,\n    Array.isArray(raw?.body)  ? raw.body[0]      : null,\n    Array.isArray(raw?.body)  ? raw.body[0]?._source : null,\n    raw?.hits?.hits?.[0]?._source,        // respuesta completa de OpenSearch _search\n    raw?.body?.hits?.hits?.[0]?._source\n  ];\n  for (const c of candidates) {\n    if (c && typeof c === 'object' && (c.rule || c.agent)) return c;\n  }\n  return raw?.body || raw;   // fallback: devuelve algo aunque no haya rule/agent\n}\n\nconst raw       = items[0].json;\nconst wazuhData = unwrapWazuh(raw);\nconst flat      = flattenObject(wazuhData);\n\n// ─── 4. MITRE ATT&CK IDs ──────────────────────────────────────────\n// Acepta tanto \"rule.mitre.id\" (string único) como \"rule.mitre.id[0]\" (array)\nconst mitreIds = [...new Set(\n  Object.keys(flat)\n    .filter(k => /^rule\\.mitre\\.id(\\[\\d+\\])?$/.test(k))\n    .map(k => flat[k])\n    .filter(v => typeof v === 'string' && /^T\\d{4}(\\.\\d{3})?$/.test(v))\n)];\n\n// ─── 5. IPs PÚBLICAS (alineado con wazuh_possible_fields.txt) ─────\nconst IP_FIELDS = [\n  'data.srcip',                                                                     // Decoder genérico\n  'data.dstip',                                                                     // Destino\n  'data.audit.srcip',                                                               // Linux auditd\n  'data.office365.ClientIP',                                                        // Microsoft 365\n  'data.aws.source_ip_address',                                                     // AWS CloudTrail\n  'data.aws.srcaddr',                                                               // AWS VPC Flow Logs\n  'data.aws.dstaddr',                                                               // AWS VPC Flow Logs\n  'data.aws.resource.instanceDetails.networkInterfaces.publicIp',                   // AWS GuardDuty\n  'data.aws.service.action.networkConnectionAction.remoteIpDetails.ipAddressV4',    // AWS GuardDuty\n  'data.port.remote_ip',                                                            // Syscollector\n  'GeoLocation.ip'                                                                  // Enriquecimiento geoip\n];\n\nconst ipsSet = new Set();\nfor (const field of IP_FIELDS) {\n  if (isPublicIP(flat[field])) ipsSet.add(flat[field].trim());\n}\n\n// Fallback: extraer IPs del full_log si los campos estructurados no capturaron nada\nconst logText = [flat['full_log'], flat['previous_log'], flat['message']]\n  .filter(Boolean).join(' ');\n(logText.match(/\\b(\\d{1,3}\\.){3}\\d{1,3}\\b/g) || [])\n  .forEach(m => { if (isPublicIP(m)) ipsSet.add(m); });\n\nconst ips = [...ipsSet];\n\n// ─── 6. CVEs ──────────────────────────────────────────────────────\nconst CVE_REGEX  = /CVE-\\d{4}-\\d{4,7}/gi;\nconst CVE_FIELDS = ['rule.cve', 'data.vulnerability.cve'];\nconst cvesSet    = new Set();\n\n// Primero los campos dedicados (preferentes)\nfor (const field of CVE_FIELDS) {\n  const v = flat[field];\n  if (typeof v === 'string') {\n    (v.match(CVE_REGEX) || []).forEach(c => cvesSet.add(c.toUpperCase()));\n  }\n}\n// Luego barrido general (descripciones, títulos, etc.)\nfor (const key of Object.keys(flat)) {\n  const v = String(flat[key] ?? '');\n  (v.match(CVE_REGEX) || []).forEach(c => cvesSet.add(c.toUpperCase()));\n}\nconst cves = [...cvesSet];\n\n// ─── 7. DOMINIOS ──────────────────────────────────────────────────\nconst DOMAIN_FIELDS  = ['data.gcp.jsonPayload.queryName', 'data.url'];\nconst DOMAIN_REGEX   = /\\b([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+)\\b/gi;\nconst TLD_BLACKLIST  = /\\.(arpa|local|lan|internal|localdomain)$/i;\nconst domainsSet     = new Set();\n\nfor (const field of DOMAIN_FIELDS) {\n  const v = flat[field];\n  if (typeof v !== 'string') continue;\n  let candidate = v;\n  try { candidate = new URL(v).hostname; } catch (_) { /* no es URL */ }\n  for (const d of (candidate.match(DOMAIN_REGEX) || [])) {\n    const dom = d.toLowerCase();\n    if (RE_IPV4.test(dom))        continue;   // descarta IPs\n    if (TLD_BLACKLIST.test(dom))  continue;   // descarta internos\n    if (!dom.includes('.'))       continue;\n    domainsSet.add(dom);\n  }\n}\nconst domains = [...domainsSet];\n\n// ─── 8. HASHES ────────────────────────────────────────────────────\nconst RE_SHA256 = /^[a-f0-9]{64}$/i;\nconst RE_SHA1   = /^[a-f0-9]{40}$/i;\nconst RE_MD5    = /^[a-f0-9]{32}$/i;\n\nconst hashes = { sha256: new Set(), sha1: new Set(), md5: new Set() };\nconst check  = (re, bucket, v) => { if (v && re.test(v)) bucket.add(v.toLowerCase()); };\n\ncheck(RE_SHA256, hashes.sha256, flat['syscheck.sha256_after']);\ncheck(RE_SHA1,   hashes.sha1,   flat['syscheck.sha1_after']);\ncheck(RE_SHA1,   hashes.sha1,   flat['data.virustotal.sha1']);\ncheck(RE_SHA1,   hashes.sha1,   flat['data.virustotal.source.sha1']);\ncheck(RE_MD5,    hashes.md5,    flat['syscheck.md5_after']);\ncheck(RE_MD5,    hashes.md5,    flat['data.virustotal.source.md5']);\n\nconst hashesOut = {\n  sha256: [...hashes.sha256],\n  sha1:   [...hashes.sha1],\n  md5:    [...hashes.md5]\n};\n\n// ─── 9. QUERY GRAPHQL PARA OPENCTI ────────────────────────────────\n// Escape seguro: evita que un valor con comillas rompa la query\nconst gql = arr => arr.map(v => `\"${String(v).replace(/\"/g, '\\\\\"')}\"`).join(',');\nconst gqlStr = v => String(v).replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"');\nconst blocks = [];\n\nif (mitreIds.length) {\n  blocks.push(`\n    techniques: attackPatterns(\n      first: 50,\n      filters: { mode: and, filters: [{ key: [\"x_mitre_id\"], values: [${gql(mitreIds)}] }], filterGroups: [] }\n    ) {\n      edges { node { id name description x_mitre_id\n        killChainPhases { phase_name }\n        stixCoreRelationships(relationship_type: \"mitigates\", first: 20) {\n          edges { node { from { ... on CourseOfAction { name description } } } }\n        }\n      } }\n    }`);\n}\n\n// ── IPs: dual (Indicators + Observables) ─────────────────────────\nif (ips.length) {\n  const searchIPs = gqlStr(ips.join(' '));  // OR implícito en search\n  blocks.push(`\n    ipIndicators: indicators(\n      search: \"${searchIPs}\",\n      first: 50\n    ) {\n      edges { node {\n        id name pattern confidence revoked valid_from valid_until\n        x_opencti_score x_opencti_main_observable_type\n        objectLabel { value color }\n        createdBy { ... on Identity { name } }\n        stixCoreRelationships(relationship_type: \"indicates\", first: 20) {\n          edges { node {\n            confidence description\n            to {\n              ... on Malware       { id name description is_family malware_types }\n              ... on ThreatActor   { id name description threat_actor_types }\n              ... on Campaign      { id name description }\n              ... on IntrusionSet  { id name description }\n              ... on AttackPattern { id name x_mitre_id }\n              ... on Tool          { id name }\n            }\n          } }\n        }\n      } }\n    }\n    ipObservables: stixCyberObservables(\n      search: \"${searchIPs}\",\n      types: [\"IPv4-Addr\",\"IPv6-Addr\"],\n      first: 50\n    ) {\n      edges { node {\n        id observable_value\n        ... on IPv4Addr { value }\n        ... on IPv6Addr { value }\n      } }\n    }`);\n}\n\nif (cves.length) {\n  blocks.push(`\n    vulnerabilities: vulnerabilities(\n      first: 50,\n      filters: { mode: and, filters: [{ key: [\"name\"], values: [${gql(cves)}] }], filterGroups: [] }\n    ) { edges { node { id name description x_opencti_cvss_base_score } } }`);\n}\n\nif (domains.length) {\n  const searchDoms = gqlStr(domains.join(' '));\n  blocks.push(`\n    domainIndicators: indicators(\n      search: \"${searchDoms}\",\n      first: 50\n    ) {\n      edges { node {\n        id name pattern confidence x_opencti_score revoked valid_until\n        objectLabel { value }\n        stixCoreRelationships(relationship_type: \"indicates\", first: 20) {\n          edges { node { to {\n            ... on Malware      { name description is_family }\n            ... on ThreatActor  { name description }\n            ... on Campaign     { name }\n            ... on IntrusionSet { name }\n          } } }\n        }\n      } }\n    }\n    domainObservables: stixCyberObservables(\n      search: \"${searchDoms}\",\n      types: [\"Domain-Name\",\"Hostname\"],\n      first: 20\n    ) {\n      edges { node {\n        id observable_value\n        ... on DomainName { value }\n      } }\n    }`);\n}\n\n// ── Hashes: dual ─────────────────────────────────────────────────\nconst allHashes = [...hashesOut.sha256, ...hashesOut.sha1, ...hashesOut.md5];\nif (allHashes.length) {\n  const searchH = gqlStr(allHashes.join(' '));\n  blocks.push(`\n    hashIndicators: indicators(\n      search: \"${searchH}\",\n      first: 50\n    ) {\n      edges { node {\n        id name pattern confidence x_opencti_score\n        objectLabel { value }\n        stixCoreRelationships(relationship_type: \"indicates\", first: 20) {\n          edges { node { to {\n            ... on Malware      { name description is_family }\n            ... on ThreatActor  { name }\n            ... on Campaign     { name }\n            ... on IntrusionSet { name }\n          } } }\n        }\n      } }\n    }\n    fileObservables: stixCyberObservables(\n      search: \"${searchH}\",\n      types: [\"StixFile\"],\n      first: 20\n    ) {\n      edges { node {\n        ... on StixFile { id name hashes { algorithm hash } }\n      } }\n    }`);\n}\n\n// ─── 10. SALIDA ───────────────────────────────────────────────────\nconst iocs_extracted = {\n  mitre_ids: mitreIds,\n  ips, cves, domains,\n  hashes: hashesOut\n};\n\nif (blocks.length === 0) {\n  return [{ json: { skip: true, wazuhData, iocs_extracted } }];\n}\n\nconst query = `query GetThreatContext {\\n${blocks.join('\\n')}\\n}`;\nreturn [{ json: { query, skip: false, wazuhData, iocs_extracted } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        16
+      ],
+      "id": "9ae9528c-8e96-480b-b0ff-d54c23077d78",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8e227094-4a9c-49ae-b4e6-3918332c45e3",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "b7b69c48-79dd-4421-a506-25fae9e7d6c9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "curlImport": "",
+        "httpVariantWarning": "",
+        "method": "POST",
+        "url": "http://opencti.ryoiki:8080/graphql",
+        "": "",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openCtiApi",
+        "provideSslCertificates": false,
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.query }}"
+            }
+          ]
+        },
+        "options": {},
+        "infoMessage": ""
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8c679aae-130f-4b80-9134-154c0a01ddeb",
+      "name": "OpenCTI HTTP Request",
+      "extendsCredential": "openCtiApi",
+      "credentials": {
+        "openCtiApi": {
+          "id": "AVLDvlYATUyeoKO4",
+          "name": "OpenCTI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "qwen2.5:14b",
+          "mode": "list",
+          "cachedResultName": "qwen2.5:14b"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "==Eres un analista SOC Tier-2 senior, experto en Wazuh y en todas sus familias de alertas (endpoint, red, cloud, identidad, contenedores, vulnerabilidades). Evalúas UN incidente y decides la respuesta adecuada independientemente de la plataforma origen. Respondes EXCLUSIVAMENTE con un JSON válido. Sin markdown, sin backticks, sin texto antes ni después.\n\n═══════════════════════════════════════════════════════════════════\n  DATOS DEL INCIDENTE (Wazuh)\n═══════════════════════════════════════════════════════════════════\nRegla ID         : {{ $json.incident?.rule?.id || 'N/A' }}\nDescripción      : {{ $json.incident?.rule?.description || 'N/A' }}\nNivel Wazuh      : {{ $json.incident?.rule?.level ?? 0 }}/15\nCategorías       : {{ $json.incident?.rule?.groups?.join(', ') || 'N/A' }}\nFrecuencia       : {{ $json.incident?.rule?.frequency ?? 1 }} (nº disparos correlacionados)\nTimestamp evento : {{ $json.incident?.timestamp || 'N/A' }}\nAgente           : {{ $json.incident?.agent?.name || 'N/A' }} ({{ $json.incident?.agent?.ip || 'N/A' }})\nCriticidad agente: {{ /prod|prd|production/i.test($json.incident?.agent?.name || '') ? 'ALTA (producción)' : /dev|test|stage/i.test($json.incident?.agent?.name || '') ? 'BAJA (desarrollo)' : 'NORMAL' }}\nIP Origen        : {{ $json.incident?.data?.srcip || $json.incident?.data?.aws?.source_ip_address || $json.incident?.data?.office365?.ClientIP || 'N/A' }}\nGeolocalización  : {{ $json.incident?.GeoLocation?.country_name || 'N/A' }} / {{ $json.incident?.GeoLocation?.city_name || 'N/A' }}\nUsuario Origen   : {{ $json.incident?.data?.srcuser || $json.incident?.data?.office365?.UserId || $json.incident?.data?.aws?.userIdentity?.userName || 'N/A' }}\nUsuario Dest     : {{ $json.incident?.data?.dstuser || 'N/A' }}\nMITRE IDs        : {{ $json.incident?.rule?.mitre?.id?.join(', ') || 'N/A' }}\nMITRE Técnicas   : {{ $json.incident?.rule?.mitre?.technique?.join(', ') || 'N/A' }}\nMITRE Tácticas   : {{ $json.incident?.rule?.mitre?.tactic?.join(', ') || 'N/A' }}\nCompliance tags  : {{ [($json.incident?.rule?.pci_dss?.length ? 'PCI-DSS:' + $json.incident.rule.pci_dss.join('/') : null),($json.incident?.rule?.hipaa?.length ? 'HIPAA:' + $json.incident.rule.hipaa.join('/') : null),($json.incident?.rule?.gdpr?.length ? 'GDPR:' + $json.incident.rule.gdpr.join('/') : null),($json.incident?.rule?.nist_800_53?.length ? 'NIST:' + $json.incident.rule.nist_800_53.join('/') : null)].filter(Boolean).join(' | ') || 'Ninguno' }}\nIntegración      : {{ $json.incident?.data?.integration || $json.incident?.decoder?.name || 'generic' }}\nLog crudo        : {{ ($json.incident?.full_log || 'N/A').substring(0, 500) }}\n\n═══════════════════════════════════════════════════════════════════\n  ESCALA DE NIVELES WAZUH (referencia semántica)\n═══════════════════════════════════════════════════════════════════\n  0-3   Ruido / autorización normal → sin relevancia\n  4-6   Errores aislados, baja relevancia\n  7-9   Primera vez vista, origen inválido → señal débil\n  10-11 Múltiples errores correlacionados o integridad comprometida\n  12-13 Ataque probable con patrón conocido\n  14-15 Ataque confirmado / severo sin falsos positivos\n\n  Nivel actual ({{ $json.incident?.rule?.level ?? 0 }}) significa:\n  \"{{ $json.incident?.rule?.level >= 14 ? 'Ataque confirmado, sin falsos positivos esperados' : $json.incident?.rule?.level >= 12 ? 'Ataque probable con patrón conocido' : $json.incident?.rule?.level >= 10 ? 'Múltiples errores correlacionados o integridad comprometida' : $json.incident?.rule?.level >= 7 ? 'Señal débil: primera vez o origen inválido' : $json.incident?.rule?.level >= 4 ? 'Error aislado de baja relevancia' : 'Ruido o evento autorizado' }}\"\n\n═══════════════════════════════════════════════════════════════════\n  ENRIQUECIMIENTO OpenCTI\n═══════════════════════════════════════════════════════════════════\nAmenazas activas confirmadas : {{ $json.has_threats ? 'SI → ' + $json.confirmed_threats.join(', ') : 'NO' }}\nAmenazas revocadas           : {{ $json.has_revoked_threats ? 'SI → ' + $json.revoked_threats.join(', ') + ' (histórico, señal amarilla)' : 'NO' }}\nTotal indicators IP          : {{ $json.summary.total_ip_indicators }}\nTotal indicators dominio     : {{ $json.summary.total_domain_indicators }}\nTotal indicators hash        : {{ $json.summary.total_hash_indicators }}\nCVEs referenciadas           : {{ $json.summary.total_cves }}\nMitigaciones MITRE sugeridas : {{ $json.threat_context?.techniques?.[0]?.mitigations?.join(', ') || 'N/A' }}\n\n═══════════════════════════════════════════════════════════════════\n  CHECKLIST OBLIGATORIO PRE-DECISIÓN\n═══════════════════════════════════════════════════════════════════\n  Antes de emitir el JSON final, responde estas 4 preguntas en el\n  campo \"_razonamiento\" del JSON con este formato EXACTO:\n\n  \"_razonamiento\": \"Q1=<SI|NO>, Q2=<SI|NO>, Q3=<SI|NO>, Q4=<SI|NO>, stop_aplicado=<P1|P2|P3|NO>, regla_final=<codigo>\"\n\n  Reglas para regla_final:\n  - Si stop_aplicado≠NO, regla_final DEBE ser igual a stop_aplicado (P2 → regla_final=P2).\n  - Si stop_aplicado=NO, regla_final es el código de la matriz que disparó (A1, B2, C3, etc.).\n  - regla_final NUNCA puede mezclar ambos (nunca \"P2\" como stop y \"A2\" como regla_final).\n\n  Definiciones:\n  Q1. IP Origen pública válida (no N/A, no 10.*/172.16-31.*/192.168.*/127.*/169.254.*)\n  Q2. has_threats=SI en Enriquecimiento OpenCTI (OJO: sólo amenazas ACTIVAS, NO revocadas)\n  Q3. Nivel Wazuh ≥ 14\n  Q4. Criticidad agente = ALTA\n\n  REGLAS MECÁNICAS (obedece LITERALMENTE, sin excepción):\n  • Si Q1=SI y Q2=SI → stop_aplicado=P2 → accion=\"bloquear\", gravedad=\"critica\". NO evalúes A-F.\n  • Si Q3=SI        → stop_aplicado=P3 → accion=\"escalar\",  gravedad=\"critica\". NO evalúes A-F.\n  • Si Q1=NO        → stop_aplicado=P1 (prohíbe \"bloquear\" en todo el resto de la decisión).\n  • Si ningún stop aplica → stop_aplicado=NO → evalúa A-F en orden.\n\n  ATENCIÓN: Q2 se responde SI sólo cuando \"Amenazas activas confirmadas\"\n  empieza por \"SI →\". Si las amenazas son \"revocadas\" (histórico), Q2=NO.\n\n═══════════════════════════════════════════════════════════════════\n  ÁRBOL DE DECISIÓN (evalúa en ORDEN, detén en la primera coincidencia)\n═══════════════════════════════════════════════════════════════════\n\n  ATENCIÓN: Si el CHECKLIST PRE-DECISIÓN activó algún STOP (P1/P2/P3),\n  IGNORA todo este árbol y salta directamente al FORMATO DE RESPUESTA.\n  Las matrices A-F SÓLO aplican cuando stop_aplicado=NO.\n\n━━━ STOPS DE PRIORIDAD MÁXIMA (P1-P3) ━━━\n\n  P1. Sin IP Origen pública válida (IP='N/A' o rangos 10.*/172.16-31.*/192.168.*/127.*/169.254.*):\n      → \"bloquear\" PROHIBIDO. Sólo analista/escalar/ignorar.\n\n  P2. has_threats=SI Y IP Origen pública válida:\n      → \"bloquear\" + \"critica\". OBLIGATORIO, no evaluar matrices.\n\n  P3. Nivel Wazuh ≥ 14:\n      → \"escalar\" + \"critica\". OBLIGATORIO, no evaluar matrices.\n\n━━━ MATRIZ A — IDENTIDAD Y ACCESO ━━━\n  Aplica si categorías incluyen: authentication_failed, authentication_failures,\n  authentication_success, pam, sshd, win_authentication, ms-graph, aaa,\n  o tácticas Credential Access / Initial Access con T1110/T1078/T1133.\n\n  A1. Autenticación exitosa legítima (auth_success) nivel<7:\n      → \"ignorar\" + \"baja\"\n\n  A2. Fuerza bruta (T1110):\n      - frecuencia≥6 Y nivel≥10 Y amenazas revocadas=SI → \"bloquear\" + \"alta\"\n      - frecuencia≥6 Y nivel≥10                        → \"bloquear\" + \"alta\"\n      - nivel≥8                                         → \"analista\" + \"media\"\n      - nivel<8                                         → \"ignorar\" + \"baja\"\n\n  A3. Cuenta válida sospechosa (T1078) nivel≥10:\n      → \"analista\" + \"alta\" (revisar sesión)\n\n  A4. Anomalía en login cloud (O365/AWS/Azure) desde geolocalización inusual:\n      - nivel≥10                                        → \"analista\" + \"alta\"\n      - nivel<10                                        → \"ignorar\" + \"media\"\n\n━━━ MATRIZ B — RED Y TRÁFICO ━━━\n  Aplica si categorías incluyen: web, web_attack, attack, ids, ddos, dos,\n  dns, firewall, network, recon, o tácticas Reconnaissance / Command and\n  Control / Exfiltration / Lateral Movement.\n\n  B1. Ataque web (sql_injection, xss, rce, lfi, rfi, web_attack) nivel≥10:\n      - amenazas activas=SI                             → \"bloquear\" + \"alta\"\n      - sin amenazas                                    → \"analista\" + \"alta\"\n\n  B2. Exfiltración (T1041/T1048/T1567) o C2 (T1071/T1105):\n      → \"escalar\" + \"critica\"\n\n  B3. Movimiento lateral (T1021/T1570/T1210):\n      → \"escalar\" + \"critica\"\n\n  B4. DDoS / flood / DoS nivel≥10:\n      - IP Origen pública                               → \"bloquear\" + \"alta\"\n      - sin IP identificable                            → \"escalar\" + \"alta\"\n\n  B5. Reconocimiento / scanning (T1046/T1595) nivel≥10:\n      → \"analista\" + \"media\"\n\n  B6. DNS tunneling / DGA / dominio malicioso:\n      - amenazas activas o revocadas                    → \"bloquear\" + \"alta\"\n      - sin contexto                                    → \"analista\" + \"media\"\n\n━━━ MATRIZ C — ENDPOINT Y HOST ━━━\n  Aplica si categorías incluyen: malware, rootkit, virus, trojan, ransomware,\n  syscheck, ossec, rootcheck, process, execve, o tácticas Execution/Persistence/\n  Defense Evasion/Impact.\n\n  C1. Malware / Rootkit / Ransomware confirmado:\n      → \"escalar\" + \"critica\"\n\n  C2. Escalada privilegios o persistencia (T1068/T1055/T1547/T1053):\n      - nivel≥10                                        → \"escalar\" + \"alta\"\n      - nivel<10                                        → \"analista\" + \"media\"\n\n  C3. Cambios FIM (syscheck) en rutas críticas (/etc, /bin, /boot, System32):\n      - con hash malicioso confirmado                   → \"escalar\" + \"critica\"\n      - en producción                                   → \"analista\" + \"alta\"\n      - otros                                           → \"analista\" + \"media\"\n\n  C4. Comando sospechoso (audit execve, T1059) nivel≥10:\n      → \"analista\" + \"alta\"\n\n  C5. Proceso anómalo / injection (T1055/T1620):\n      → \"analista\" + \"alta\"\n\n━━━ MATRIZ D — VULNERABILIDADES Y CONFIGURACIÓN ━━━\n  Aplica si categorías incluyen: vulnerability-detector, vulnerability, sca,\n  cis, oscap, policy_monitoring.\n\n  D1. CVE detectada con severity=Critical o CVSS≥9.0:\n      - asset en producción                             → \"escalar\" + \"critica\"\n      - otro                                            → \"analista\" + \"alta\"\n\n  D2. CVE severity=High o CVSS 7.0-8.9:\n      → \"analista\" + \"alta\"\n\n  D3. Incumplimiento SCA/CIS crítico (pci_dss con Req. 2/6/8/10/11):\n      → \"analista\" + \"media\"\n\n  D4. Vulnerabilidad Medium/Low o scan rutinario:\n      → \"ignorar\" + \"baja\"\n\n━━━ MATRIZ E — CLOUD (AWS / AZURE / GCP / O365 / GITHUB) ━━━\n  Aplica si integración es aws, gcp, office365, ms-graph, github, azure,\n  o decoder contiene alguno de estos.\n\n  E1. AWS GuardDuty finding severity=HIGH/CRITICAL:\n      → \"escalar\" + \"critica\"\n\n  E2. IAM privilegiado modificado / política crítica borrada (T1098/T1078.004):\n      → \"escalar\" + \"critica\"\n\n  E3. O365 mass download, illicit consent grant, forwarding rule creada:\n      → \"escalar\" + \"alta\"\n\n  E4. Bucket S3 expuesto público / recurso sin cifrado:\n      → \"analista\" + \"alta\"\n\n  E5. GitHub fuerza-push a rama protegida, secret pushed, workflow modificado:\n      → \"analista\" + \"alta\"\n\n  E6. Login MFA challenge fallido repetido cloud:\n      - frecuencia≥5                                    → \"bloquear\" + \"alta\"\n      - frecuencia<5                                    → \"analista\" + \"media\"\n\n━━━ MATRIZ F — CONTENEDORES Y OSQUERY ━━━\n  Aplica si categorías incluyen: docker, kubernetes, osquery, container.\n\n  F1. Docker: container started en modo privileged, --pid=host, --net=host:\n      → \"analista\" + \"alta\"\n\n  F2. Image pull de registro no permitido / imagen con malware conocido:\n      → \"bloquear\" + \"alta\" (si aplica IP/hash)\n\n  F3. osquery diff mostrando nuevo SUID binary, cron sospechoso, kernel module:\n      → \"analista\" + \"alta\"\n\n━━━ FALLBACKS ━━━\n\n  X1. Sistema interno nivel<5 sin IP pública:\n      → \"ignorar\" + \"baja\"\n\n  X2. Cualquier caso no cubierto por A-F:\n      → \"analista\" + \"media\" (fallback defensivo)\n\n━━━ POST-PROCESAMIENTO (P4) ━━━\n\n  P4. Si Criticidad agente = ALTA (producción), promocionar acción un escalón:\n      \"ignorar\" → \"analista\", \"analista\" → \"bloquear\", \"bloquear\" → \"escalar\".\n      NO aplicar si la decisión viene de STOP P1-P3 o si IP Origen no es válida.\n\n═══════════════════════════════════════════════════════════════════\n  CRITERIOS DE IOC\n═══════════════════════════════════════════════════════════════════\n- Campo \"ioc\": prioriza IP Origen si es pública, luego dominio, luego hash.\n  Si ninguno, \"Ninguno\".\n- NUNCA inventes IOCs ni nombres de malware. Solo usa los datos presentes\n  en el bloque Enriquecimiento o en los datos del incidente.\n\n═══════════════════════════════════════════════════════════════════\n  FORMATO DE RESPUESTA (JSON ESTRICTO)\n═══════════════════════════════════════════════════════════════════\n{\n  \"_razonamiento\": \"Q1=<SI|NO>, Q2=<SI|NO>, Q3=<SI|NO>, Q4=<SI|NO>, stop_aplicado=<P1|P2|P3|NO>, regla_final=<codigo>\",\n  \"resumen\": \"string — 1-2 frases (máx 250 chars)\",\n  \"gravedad\": \"baja | media | alta | critica\",\n  \"accion\": \"bloquear | analista | ignorar | escalar\",\n  \"motivo\": \"string (máx 300 chars) — regla del campo regla_final + justificación. OBLIGATORIO: si Compliance tags ≠ 'Ninguno', cita al menos un tag (ej 'PCI-DSS 10.2')\",\n  \"ioc\": \"string — IOC principal o 'Ninguno'\",\n  \"mitigaciones\": [\"string\", \"string\", \"string\"]\n}\n\nCOHERENCIA OBLIGATORIA:\n- Si stop_aplicado=P2 → accion DEBE ser \"bloquear\" y gravedad DEBE ser \"critica\".\n- Si stop_aplicado=P3 → accion DEBE ser \"escalar\" y gravedad DEBE ser \"critica\".\n- El campo motivo DEBE empezar por el valor de regla_final (ej \"P2 - ...\").\n\nLas mitigaciones deben salir de \"Mitigaciones MITRE sugeridas\" (máx 3). Si no hay, proponer 2-3 acciones concretas coherentes con la acción y categoría elegida.\n\nResponde AHORA con el JSON para el incidente de arriba."
+            }
+          ]
+        },
+        "simplify": false,
+        "options": {
+          "temperature": 0.2,
+          "top_p": 0.9,
+          "format": "json"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        800
+      ],
+      "id": "286e9e71-c375-49f2-803d-dcbd44851ce0",
+      "name": "Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "oqkSjefzjlRjya34",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════════════════════════╗\n// ║  CLASIFICADOR v3 — Sin Merge, usando referencias cruzadas n8n     ║\n// ╚══════════════════════════════════════════════════════════════════╝\n\n// ─── 1. HELPERS ───────────────────────────────────────────────────\nconst nodeNames = edges => (edges || [])\n  .map(e => e?.node?.from?.name || e?.node?.to?.name || e?.node?.name)\n  .filter(Boolean);\n\nfunction normalizeIndicator(ind) {\n  if (!ind) return null;\n  const threats = (ind.stixCoreRelationships?.edges || [])\n    .map(rel => {\n      const to = rel?.node?.to;\n      if (!to?.name) return null;\n      let type = 'Unknown';\n      if ('is_family' in to)               type = 'Malware';\n      else if ('threat_actor_types' in to) type = 'ThreatActor';\n      else if ('x_mitre_id' in to)         type = 'AttackPattern';\n      else if (to.name)                    type = 'Threat';\n      return { type, name: to.name, description: to.description || null, is_family: to.is_family ?? null };\n    })\n    .filter(Boolean);\n  return {\n    name: ind.name || null,\n    pattern: ind.pattern || null,\n    confidence: ind.confidence ?? null,\n    score: ind.x_opencti_score ?? null,\n    revoked: ind.revoked ?? false,\n    valid_until: ind.valid_until || null,\n    labels: (ind.objectLabel || []).map(l => l.value).filter(Boolean),\n    threats\n  };\n}\n\n// ─── 2. REFERENCIAS DIRECTAS (no Merge) ───────────────────────────\n// El Extractor siempre deja el Wazuh desenvuelto en wazuhData\nconst incident = $('Code in JavaScript').item.json.wazuhData || {};\n\n// OpenCTI solo existe si la rama true del If se ejecutó\nlet ocData = null;\ntry {\n  const oc = $('OpenCTI HTTP Request').item.json;\n  // Busca .data tanto en raíz como en body (depende de config HTTP node)\n  ocData = oc?.data || oc?.body?.data || null;\n} catch (e) {\n  // El nodo OpenCTI no se ejecutó (rama skip del If) — es normal\n  ocData = null;\n}\n\nconst hasEnrichment = !!ocData && Object.keys(ocData).length > 0;\n\n// ─── 3. NORMALIZACIÓN (igual que antes) ───────────────────────────\nconst techniques = (ocData?.techniques?.edges || []).map(e => ({\n  mitre_id: e.node.x_mitre_id || null,\n  name: e.node.name,\n  description: (e.node.description || '').substring(0, 500),\n  kill_chain: [...new Set((e.node.killChainPhases || []).map(p => p.phase_name))],\n  mitigations: nodeNames(e.node.stixCoreRelationships?.edges)\n}));\n\nconst ipIndicators      = (ocData?.ipIndicators?.edges      || []).map(e => normalizeIndicator(e.node)).filter(Boolean);\nconst ipObservables     = (ocData?.ipObservables?.edges     || []).map(e => ({ id: e.node.id, value: e.node.value || e.node.observable_value }));\nconst cves              = (ocData?.vulnerabilities?.edges   || []).map(e => ({ name: e.node.name, cvss_base: e.node.x_opencti_cvss_base_score ?? null, description: (e.node.description || '').substring(0, 300) }));\nconst domainIndicators  = (ocData?.domainIndicators?.edges  || []).map(e => normalizeIndicator(e.node)).filter(Boolean);\nconst domainObservables = (ocData?.domainObservables?.edges || []).map(e => ({ id: e.node.id, value: e.node.value || e.node.observable_value }));\nconst hashIndicators    = (ocData?.hashIndicators?.edges    || []).map(e => normalizeIndicator(e.node)).filter(Boolean);\nconst fileObservables   = (ocData?.fileObservables?.edges   || []).map(e => ({ id: e.node.id, name: e.node.name, hashes: (e.node.hashes || []).map(h => `${h.algorithm}:${h.hash}`) }));\n\n// ─── 4. THREATS ACTIVOS VS REVOCADOS ──────────────────────────────\nconst activeThreats  = arr => arr.some(i => !i.revoked && i.threats.length > 0);\nconst revokedThreats = arr => arr.some(i =>  i.revoked && i.threats.length > 0);\n\nconst has_threats = activeThreats(ipIndicators) || activeThreats(domainIndicators) || activeThreats(hashIndicators) || cves.length > 0;\nconst has_revoked_threats = revokedThreats(ipIndicators) || revokedThreats(domainIndicators) || revokedThreats(hashIndicators);\n\nconst activeSet  = new Set();\nconst revokedSet = new Set();\nfor (const arr of [ipIndicators, domainIndicators, hashIndicators]) {\n  for (const ind of arr) {\n    for (const t of ind.threats) {\n      (ind.revoked ? revokedSet : activeSet).add(`${t.type}:${t.name}`);\n    }\n  }\n}\n\n// ─── 5. OUTPUT ────────────────────────────────────────────────────\nreturn [{\n  json: {\n    incident,\n    status: hasEnrichment ? 'Enriquecimiento completado' : 'Sin datos OpenCTI (skip o vacío)',\n    has_threats,\n    has_revoked_threats,\n    confirmed_threats: [...activeSet],\n    revoked_threats:   [...revokedSet],\n    summary: {\n      total_techniques:          techniques.length,\n      total_ip_indicators:       ipIndicators.length,\n      total_ip_observables:      ipObservables.length,\n      total_cves:                cves.length,\n      total_domain_indicators:   domainIndicators.length,\n      total_domain_observables:  domainObservables.length,\n      total_hash_indicators:     hashIndicators.length,\n      total_file_observables:    fileObservables.length\n    },\n    threat_context: {\n      techniques,\n      ips:     { indicators: ipIndicators,     observables: ipObservables     },\n      cves,\n      domains: { indicators: domainIndicators, observables: domainObservables },\n      files:   { indicators: hashIndicators,   observables: fileObservables   }\n    },\n    _debug: {\n      incident_found: !!incident.rule,\n      opencti_found:  hasEnrichment,\n      opencti_keys:   ocData ? Object.keys(ocData) : []\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        336
+      ],
+      "id": "33887ed7-e6f3-47a2-bcf2-e713849a909c",
+      "name": "Clasificador1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ╔══════════════════════════════════════════════════════════════════╗\n// ║  PARSER LLM + FUSOR v3 — Category-agnostic                        ║\n// ║  Parsea la salida de Ollama, valida, y fusiona todo el contexto   ║\n// ║  (Wazuh + OpenCTI + IA) en un objeto plano listo para             ║\n// ║  Discord/OPNsense/futuras integraciones.                          ║\n// ║                                                                   ║\n// ║  Defensas:                                                        ║\n// ║   - Parseo tolerante a markdown/texto extra                       ║\n// ║   - Validación de enums (accion/gravedad)                         ║\n// ║   - Fallback defensivo a 'analista' ante cualquier fallo          ║\n// ║   - IOC Guard: 'bloquear' solo si IOC es actionable               ║\n// ║   - Adaptación de opciones/previews/links al tipo de IOC          ║\n// ║   - Soporte de subtécnicas MITRE (T1078.001)                      ║\n// ║   - URLs con paréntesis escapados para Discord                    ║\n// ╚══════════════════════════════════════════════════════════════════╝\n\n// ─── 1. EXTRAER TEXTO DEL LLM ─────────────────────────────────────\nconst llmRaw = items[0]?.json || {};\nlet rawText = llmRaw.message?.content\n           || llmRaw.response\n           || llmRaw.text\n           || llmRaw.content\n           || '';\n\nrawText = String(rawText)\n  .replace(/```json/gi, '')\n  .replace(/```/g, '')\n  .trim();\n\n// ─── 2. PARSEO DEFENSIVO ──────────────────────────────────────────\nconst FALLBACK = {\n  _razonamiento: 'LLM_PARSE_ERROR',\n  resumen: 'Error de parseo en la respuesta del LLM — revisión manual',\n  gravedad: 'alta',\n  accion: 'analista',\n  motivo: 'Fallback defensivo: el modelo no devolvió JSON válido. Requiere supervisión humana.',\n  ioc: 'Ninguno',\n  mitigaciones: ['Revisar logs del nodo Ollama', 'Verificar prompt', 'Escalar si es repetitivo']\n};\n\nlet ia = FALLBACK;\nlet parse_ok = false;\ntry {\n  ia = JSON.parse(rawText);\n  parse_ok = true;\n} catch (e1) {\n  const m = rawText.match(/\\{[\\s\\S]*\\}/);\n  if (m) {\n    try {\n      ia = JSON.parse(m[0]);\n      parse_ok = true;\n    } catch (e2) {\n      ia = { ...FALLBACK, motivo: `${FALLBACK.motivo} | Raw: ${rawText.substring(0, 200)}` };\n    }\n  } else {\n    ia = { ...FALLBACK, motivo: `${FALLBACK.motivo} | Raw: ${rawText.substring(0, 200)}` };\n  }\n}\n\n// ─── 3. VALIDACIÓN DE ENUMS ───────────────────────────────────────\nconst ACCIONES   = ['bloquear', 'analista', 'ignorar', 'escalar'];\nconst GRAVEDADES = ['baja', 'media', 'alta', 'critica'];\n\nif (!ACCIONES.includes(ia.accion))     ia.accion   = 'analista';\nif (!GRAVEDADES.includes(ia.gravedad)) ia.gravedad = 'media';\n\nia.resumen       = ia.resumen       || 'Sin resumen generado';\nia.motivo        = ia.motivo        || 'Sin motivo generado';\nia.ioc           = ia.ioc           || 'Ninguno';\nia._razonamiento = ia._razonamiento || 'N/A';\nia.mitigaciones  = Array.isArray(ia.mitigaciones) ? ia.mitigaciones : [];\n\n// ─── 4. IOC GUARD (category-agnostic) ─────────────────────────────\nconst _RE_IPV4    = /^(\\d{1,3}\\.){3}\\d{1,3}$/;\nconst _PRIVATE_RE = /^(10\\.|172\\.(1[6-9]|2\\d|3[01])\\.|192\\.168\\.|127\\.|169\\.254\\.)/;\nconst _RE_SHA256  = /^[a-f0-9]{64}$/i;\nconst _RE_SHA1    = /^[a-f0-9]{40}$/i;\nconst _RE_MD5     = /^[a-f0-9]{32}$/i;\nconst _RE_DOMAIN  = /^(?!\\d+\\.\\d+\\.\\d+\\.\\d+$)[a-z0-9][a-z0-9.-]*\\.[a-z]{2,}$/i;\n\nconst iocClean     = String(ia.ioc).trim();\nconst isPublicIP   = _RE_IPV4.test(iocClean) && !_PRIVATE_RE.test(iocClean);\nconst isHash       = _RE_SHA256.test(iocClean) || _RE_SHA1.test(iocClean) || _RE_MD5.test(iocClean);\nconst isDomain     = _RE_DOMAIN.test(iocClean);\nconst iocBlockable = isPublicIP || isHash || isDomain;\n\nlet downgrade_applied = false;\nif (ia.accion === 'bloquear' && !iocBlockable) {\n  ia.accion   = 'analista';\n  ia.gravedad = 'alta';\n  ia.motivo   = 'DEGRADADO por guard: accion=bloquear requiere IOC actionable (IP pública, dominio o hash). Original: ' + ia.motivo.substring(0, 150);\n  downgrade_applied = true;\n}\n\n// ─── 5. PULL DE CONTEXTO DEL CLASIFICADOR ─────────────────────────\nconst clasif = $('Clasificador1').item.json;\nconst inc    = clasif.incident       || {};\nconst rule   = inc.rule              || {};\nconst agent  = inc.agent             || {};\nconst d      = inc.data              || {};\nconst mitre  = rule.mitre            || {};\nconst tc     = clasif.threat_context || { techniques: [], ips: {}, cves: [], domains: {}, files: {} };\n\n// ─── 6. HELPERS + ENRIQUECIMIENTO PARA ANALISTA ───────────────────\nconst arr = v => (Array.isArray(v) ? v.join(', ') : (v ?? 'N/A'));\n\n// 6.1 Prioridad basada en nivel Wazuh\nconst prioridad = rule.level >= 14 ? 'CRITICA'\n                : rule.level >= 12 ? 'ALTA'\n                : rule.level >= 7  ? 'MEDIA'\n                                   : 'BAJA';\n\n// 6.2 Mitigaciones numeradas\nconst mitigaciones_txt = ia.mitigaciones.length\n  ? ia.mitigaciones.map((m, i) => `${i + 1}. ${m}`).join('\\n')\n  : 'Sin mitigaciones específicas';\n\n// 6.3 DETECCIÓN DEL TIPO DE IOC\nconst RE_IPV6 = /^[0-9a-f:]+$/i;\nconst RE_CVE  = /^CVE-\\d{4}-\\d{4,7}$/i;\n\nlet ioc_type = 'none';\nlet ioc_is_actionable = false;\n\nif (iocClean && iocClean !== 'Ninguno' && iocClean !== 'N/A') {\n  if (isPublicIP) {\n    ioc_type = 'ip_public';\n    ioc_is_actionable = true;\n  } else if (_RE_IPV4.test(iocClean) && _PRIVATE_RE.test(iocClean)) {\n    ioc_type = 'ip_private';\n  } else if (RE_IPV6.test(iocClean) && iocClean.includes(':')) {\n    ioc_type = 'ipv6';\n    ioc_is_actionable = true;\n  } else if (_RE_SHA256.test(iocClean)) ioc_type = 'hash_sha256';\n  else if (_RE_SHA1.test(iocClean))     ioc_type = 'hash_sha1';\n  else if (_RE_MD5.test(iocClean))      ioc_type = 'hash_md5';\n  else if (RE_CVE.test(iocClean))       ioc_type = 'cve';\n  else if (_RE_DOMAIN.test(iocClean))   ioc_type = 'domain';\n  else                                  ioc_type = 'other';\n}\n\n// 6.4 OpenCTI: score agregado de TODOS los tipos de IOC\nconst allIndicators = [\n  ...(tc.ips?.indicators     || []),\n  ...(tc.domains?.indicators || []),\n  ...(tc.files?.indicators   || [])\n];\nconst cti_score = allIndicators.length\n  ? Math.max(...allIndicators.map(i => i.score || 0), 0)\n  : 0;\n\nconst cti_score_bar = cti_score >= 80 ? '🟥🟥🟥🟥🟥'\n                    : cti_score >= 60 ? '🟥🟥🟥🟥⬜'\n                    : cti_score >= 40 ? '🟧🟧🟧⬜⬜'\n                    : cti_score >= 20 ? '🟨🟨⬜⬜⬜'\n                    : cti_score > 0   ? '🟩⬜⬜⬜⬜'\n                                      : '⬜⬜⬜⬜⬜';\n\nconst cti_counts = [\n  (clasif.summary?.total_ip_indicators     || 0) > 0 ? `${clasif.summary.total_ip_indicators} IP` : null,\n  (clasif.summary?.total_domain_indicators || 0) > 0 ? `${clasif.summary.total_domain_indicators} dom` : null,\n  (clasif.summary?.total_hash_indicators   || 0) > 0 ? `${clasif.summary.total_hash_indicators} hash` : null,\n  (clasif.summary?.total_cves              || 0) > 0 ? `${clasif.summary.total_cves} CVE` : null\n].filter(Boolean).join(' · ') || 'sin indicators';\n\nconst opencti_txt = clasif.has_threats         ? `🔴 **Amenazas ACTIVAS:** ${(clasif.confirmed_threats || []).join(', ')} | Score ${cti_score}/100 ${cti_score_bar} | ${cti_counts}`\n                  : clasif.has_revoked_threats ? `🟡 **Revocadas (histórico):** ${(clasif.revoked_threats || []).join(', ')} | Score ${cti_score}/100 ${cti_score_bar} | ${cti_counts}`\n                                               : `✅ Sin amenazas registradas en OpenCTI | ${cti_counts}`;\n\n// 6.5 MITRE ATT&CK — técnicas con URLs multi-item y soporte subtécnicas\nconst mitre_ids_raw = Array.isArray(mitre.id) ? mitre.id : [];\n\n// Técnicas: enlaces individuales por cada ID (soporta T#### y T####.###)\nconst attack_techs = mitre_ids_raw.length\n  ? mitre_ids_raw.map(id => `[${id}](https://attack.mitre.org/techniques/${id.replace('.', '/')}/)`).join(', ')\n  : 'N/A';\n\n// link_mitre: primer ID para templates simples\nconst link_mitre = mitre_ids_raw[0]\n  ? `https://attack.mitre.org/techniques/${mitre_ids_raw[0].replace('.', '/')}/`\n  : null;\n\n// link_mitre_txt: todos los IDs en formato Markdown compacto\nconst link_mitre_txt = mitre_ids_raw.length\n  ? mitre_ids_raw.map(id => `[${id}](https://attack.mitre.org/techniques/${id.replace('.', '/')}/)`).join(' · ')\n  : 'N/A';\n\n// 6.6 Multi-fuente IP y usuario\nconst srcip_final = d.srcip || d.aws?.source_ip_address || d.office365?.ClientIP || 'N/A';\nconst user_final  = d.srcuser || d.dstuser || d.office365?.UserId || d.aws?.userIdentity?.userName || 'N/A';\nconst geo         = inc.GeoLocation ? `${inc.GeoLocation.country_name || '?'} / ${inc.GeoLocation.city_name || '?'}` : 'N/A';\n// 6.6b CONTEXTO FORENSE POR FAMILIA DE ALERTA\n// Detecta qué tipo de alerta Wazuh es y extrae los campos específicos\n// que el analista necesita ver para entender qué pasó en segundos.\n\nconst groups   = Array.isArray(rule.groups) ? rule.groups : [];\nconst groupStr = groups.join(' ').toLowerCase();\nconst decName  = (inc.decoder?.name || '').toLowerCase();\nconst hasGroup = (...gs) => gs.some(g => groupStr.includes(g));\n\n// Helper para formatear líneas \"Campo: valor\" solo si el valor existe\nconst line = (label, value, wrap = '') => {\n  if (value === undefined || value === null || value === '' || value === 'N/A') return null;\n  const v = wrap === '`' ? `\\`${value}\\`` : String(value);\n  return `• ${label}: ${v}`;\n};\n\nlet context_label = 'Contexto';\nlet context_lines = [];\n\n// ── FIM (syscheck) ──\nif (hasGroup('syscheck', 'ossec') && inc.syscheck) {\n  const sc = inc.syscheck;\n  context_label = '📁 Cambio en sistema de archivos (FIM)';\n  context_lines = [\n    line('Ruta',    sc.path, '`'),\n    line('Evento',  sc.event),                               // added|modified|deleted\n    line('Atributos cambiados', arr(sc.changed_attributes)),\n    line('Tamaño antes/después', sc.size_before && sc.size_after ? `${sc.size_before} → ${sc.size_after} bytes` : null),\n    line('SHA256 antes',  sc.sha256_before, '`'),\n    line('SHA256 después', sc.sha256_after,  '`'),\n    line('MD5 después',   sc.md5_after,     '`'),\n    line('Usuario',       sc.uname_after || sc.audit?.user?.name),\n    line('Grupo',         sc.gname_after),\n    line('Proceso que modificó', sc.audit?.process?.name, '`'),\n    line('PID',           sc.audit?.process?.id),\n    line('PPID',          sc.audit?.process?.ppid)\n  ];\n}\n\n// ── Vulnerability-detector ──\nelse if (hasGroup('vulnerability', 'vulnerability-detector') && d.vulnerability) {\n  const v = d.vulnerability;\n  context_label = '🔓 Vulnerabilidad detectada';\n  context_lines = [\n    line('CVE',           v.cve, '`'),\n    line('Severidad',     v.severity),\n    line('CVSS v3',       v.cvss?.cvss3?.base_score),\n    line('Paquete',       v.package?.name, '`'),\n    line('Versión',       v.package?.version, '`'),\n    line('Vector ataque', v.cvss?.cvss3?.vector?.attack_vector),\n    line('Publicada',     v.published),\n    line('CWE',           v.cwe_reference),\n    line('Título',        v.title)\n  ];\n}\n\n// ── VirusTotal ──\nelse if (hasGroup('virustotal') && d.virustotal) {\n  const vt = d.virustotal;\n  context_label = '🦠 Análisis VirusTotal';\n  context_lines = [\n    line('Veredicto',     vt.malicious === '1' || vt.found === '1' ? '🔴 MALICIOSO' : '✅ Limpio'),\n    line('Detecciones',   vt.positives && vt.total ? `${vt.positives}/${vt.total}` : null),\n    line('SHA1',          vt.sha1, '`'),\n    line('Fichero origen', vt.source?.file, '`'),\n    line('Scan date',     vt.scan_date),\n    line('Permalink',     vt.permalink)\n  ];\n}\n\n// ── Auditd / execve ──\nelse if ((hasGroup('audit', 'audit_command', 'system_audit') || decName.includes('auditd')) && d.audit) {\n  const a = d.audit;\n  context_label = '⚙️ Ejecución de comando (auditd)';\n  const execArgs = [a.execve?.a0, a.execve?.a1, a.execve?.a2, a.execve?.a3].filter(Boolean).join(' ');\n  context_lines = [\n    line('Comando',    a.command || a.exe, '`'),\n    line('Argumentos', execArgs, '`'),\n    line('Ejecutable', a.exe, '`'),\n    line('CWD',        a.cwd, '`'),\n    line('TTY',        a.tty),\n    line('Usuario',    a.acct || a.auid),\n    line('UID/EUID',   a.uid && a.euid ? `${a.uid}/${a.euid}` : null),\n    line('PID/PPID',   a.pid && a.ppid ? `${a.pid}/${a.ppid}` : null),\n    line('Syscall',    a.syscall),\n    line('Resultado',  a.res || a.success),\n    line('Clave',      a.key)\n  ];\n}\n\n// ── SCA (Security Configuration Assessment) ──\nelse if (hasGroup('sca') && d.sca) {\n  const sca = d.sca;\n  context_label = '📋 Control de configuración (SCA)';\n  context_lines = [\n    line('Policy',      sca.policy),\n    line('Control',     sca.check?.title),\n    line('Resultado',   sca.check?.result),\n    line('Razón',       sca.check?.reason),\n    line('Fichero',     sca.check?.file, '`'),\n    line('Remediation', sca.check?.remediation ? sca.check.remediation.substring(0, 200) + '...' : null)\n  ];\n}\n\n// ── AWS ──\nelse if ((hasGroup('aws', 'amazon', 'guardduty') || d.integration === 'aws') && d.aws) {\n  const aw = d.aws;\n  context_label = '☁️ Evento AWS';\n  context_lines = [\n    line('Account ID',  aw.accountId),\n    line('Región',      aw.region),\n    line('Source',      aw.source),\n    line('IP origen',   aw.source_ip_address, '`'),\n    line('Instancia',   aw.resource?.instanceDetails?.instanceId, '`'),\n    line('IP pública',  aw.resource?.instanceDetails?.networkInterfaces?.publicIp, '`'),\n    line('IP remota',   aw.service?.action?.networkConnectionAction?.remoteIpDetails?.ipAddressV4, '`'),\n    line('Count',       aw.service?.count),\n    line('First seen',  aw.service?.eventFirstSeen),\n    line('Last seen',   aw.service?.eventLastSeen)\n  ];\n}\n\n// ── Office 365 ──\nelse if ((hasGroup('office365', 'o365') || d.integration === 'office365') && d.office365) {\n  const o = d.office365;\n  context_label = '📧 Evento Office 365';\n  context_lines = [\n    line('Operación',   o.Operation, '`'),\n    line('Usuario',     o.UserId),\n    line('IP cliente',  o.ClientIP, '`'),\n    line('Resultado',   o.ResultStatus),\n    line('Actor',       o.Actor?.ID),\n    line('Subscription', o.Subscription)\n  ];\n}\n\n// ── Docker ──\nelse if (hasGroup('docker') && d.docker) {\n  const dk = d.docker;\n  context_label = '🐳 Evento Docker';\n  context_lines = [\n    line('Acción',      dk.Action, '`'),\n    line('Tipo',        dk.Type),\n    line('Contenedor',  dk.Actor?.Attributes?.name, '`'),\n    line('Imagen',      dk.Actor?.Attributes?.image, '`')\n  ];\n}\n\n// ── OSCAP ──\nelse if (hasGroup('oscap') && d.oscap) {\n  const os = d.oscap;\n  context_label = '🔍 Escaneo OSCAP';\n  context_lines = [\n    line('Profile',     os.scan?.profile?.title),\n    line('Benchmark',   os.scan?.benchmark?.id),\n    line('Check',       os.check?.title),\n    line('Severidad',   os.check?.severity),\n    line('Resultado',   os.check?.result),\n    line('OVAL ID',     os.check?.oval?.id, '`')\n  ];\n}\n\n// ── MS Graph (Defender) ──\nelse if (hasGroup('ms-graph', 'microsoft', 'defender') && d['ms-graph']) {\n  const m = d['ms-graph'];\n  context_label = '🛡️ Alerta MS Graph / Defender';\n  context_lines = [\n    line('Título',          m.title),\n    line('Categoría',       m.category),\n    line('Severidad',       m.severity),\n    line('Detection source', m.detectionSource),\n    line('Determinación',   m.determination),\n    line('Clasificación',   m.classification),\n    line('Técnicas MITRE',  arr(m.mitreTechniques)),\n    line('Estado',          m.status),\n    line('Actor',           m.actorDisplayName),\n    line('Threat',          m.threatDisplayName),\n    line('URL alerta',      m.alertWebUrl)\n  ];\n}\n\n// ── GitHub ──\nelse if (hasGroup('github') && d.github) {\n  const g = d.github;\n  context_label = '🐙 Evento GitHub';\n  context_lines = [\n    line('Acción',      g.action, '`'),\n    line('Actor',       g.actor),\n    line('Organización', g.org),\n    line('Repo',        g.repo, '`'),\n    line('País actor',  g.actor_location?.country_code)\n  ];\n}\n\n// ── GCP ──\nelse if ((hasGroup('gcp') || d.integration === 'gcp') && d.gcp) {\n  const g = d.gcp;\n  context_label = '☁️ Evento GCP';\n  context_lines = [\n    line('Proyecto',    g.resource?.labels?.project_id),\n    line('Tipo recurso', g.resource?.type),\n    line('Ubicación',   g.resource?.labels?.location),\n    line('Severidad',   g.severity),\n    line('Query DNS',   g.jsonPayload?.queryName, '`'),\n    line('Response',    g.jsonPayload?.responseCode)\n  ];\n}\n\n// ── Red genérica (firewall, IDS, web) ──\nelse if (hasGroup('firewall', 'ids', 'web', 'web_attack', 'attack', 'ddos', 'dos', 'recon') || d.srcip || d.dstip) {\n  context_label = '🌐 Contexto de red';\n  context_lines = [\n    line('IP origen',   d.srcip, '`'),\n    line('IP destino',  d.dstip, '`'),\n    line('Puerto orig', d.srcport),\n    line('Puerto dest', d.dstport),\n    line('Protocolo',   d.protocol),\n    line('URL',         d.url, '`'),\n    line('Acción',      d.action),\n    line('Status',      d.status)\n  ];\n}\n\n// ── Fallback: intentamos sacar lo que haya en data.* ──\nelse {\n  context_label = 'ℹ️ Datos del evento';\n  context_lines = [\n    line('Usuario origen', d.srcuser),\n    line('Usuario destino', d.dstuser),\n    line('IP origen', d.srcip, '`'),\n    line('Comando', d.command, '`'),\n    line('Fichero', d.file, '`'),\n    line('URL', d.url, '`'),\n    line('Protocolo', d.protocol),\n    line('Status', d.status)\n  ];\n}\n\n// Filtra nulls y compone el bloque final\nconst context_txt_lines = context_lines.filter(Boolean);\nconst context_txt = context_txt_lines.length\n  ? `**${context_label}**\\n${context_txt_lines.join('\\n')}`\n  : `**${context_label}**\\nSin datos específicos disponibles`;\n\n// 6.7 Criticidad del agente\nconst agent_name = (agent.name || '').toLowerCase();\nconst criticidad_agente = /prod|prd|production/.test(agent_name) ? '🔴 ALTA (producción)'\n                        : /dev|test|stage/.test(agent_name)      ? '🟢 BAJA (desarrollo)'\n                                                                 : '🟡 NORMAL';\n\n// 6.8 Ventana temporal\nconst ts_evento = inc.timestamp ? new Date(inc.timestamp) : null;\nconst minutos_desde = ts_evento ? Math.round((new Date() - ts_evento) / 60000) : null;\nconst ventana_temporal = minutos_desde === null ? 'N/A'\n                       : minutos_desde < 2      ? '🔴 AHORA (<2 min)'\n                       : minutos_desde < 15     ? `🟠 Reciente (${minutos_desde} min)`\n                       : minutos_desde < 60     ? `🟡 Hace ${minutos_desde} min`\n                       : minutos_desde < 1440   ? `⚪ Hace ${Math.round(minutos_desde / 60)}h`\n                                                : `⚪ Hace ${Math.round(minutos_desde / 1440)}d`;\n\n// 6.9 Frecuencia\nconst freq_txt = rule.frequency && rule.frequency > 1\n  ? `${rule.frequency} eventos correlacionados`\n  : '1 evento';\n\n// 6.10 Compliance tags pre-renderizados\nconst compliance = [];\nif (rule.pci_dss?.length)     compliance.push(`**PCI-DSS** ${rule.pci_dss.join('/')}`);\nif (rule.hipaa?.length)       compliance.push(`**HIPAA** ${rule.hipaa.join('/')}`);\nif (rule.gdpr?.length)        compliance.push(`**GDPR** ${rule.gdpr.join('/')}`);\nif (rule.nist_800_53?.length) compliance.push(`**NIST** ${rule.nist_800_53.join('/')}`);\nconst compliance_txt = compliance.length ? compliance.join(' | ') : 'Ninguno';\n\n// 6.11 OPCIONES DE RESPUESTA adaptadas al tipo de IOC\nfunction buildOpciones(iocType, ioc) {\n  const op_escalar = `🚨 \\`escalar\\` → Notifica al canal Tier-2 para investigación profunda (sin modificar infraestructura)`;\n  const op_cerrar  = `❌ \\`cerrar\\` → Marca como revisado sin acción. Queda registrado para auditoría`;\n\n  let op_bloquear = null;\n  switch (iocType) {\n    case 'ip_public':\n    case 'ipv6':\n      op_bloquear = `🔨 \\`bloquear\\` → Añade **${ioc}** al alias \\`Bloqueo_SOAR\\` en OPNsense (reversible)`;\n      break;\n    case 'domain':\n      op_bloquear = `🔨 \\`bloquear\\` → Bloqueo DNS del dominio **${ioc}** (pendiente integración Unbound)`;\n      break;\n    case 'hash_sha256':\n    case 'hash_sha1':\n    case 'hash_md5':\n      op_bloquear = `🔨 \\`bloquear\\` → Cuarentena del fichero **${ioc.substring(0, 16)}...** (pendiente integración EDR)`;\n      break;\n    default:\n      op_bloquear = null;\n  }\n\n  const opciones = [];\n  if (op_bloquear) opciones.push(op_bloquear);\n  opciones.push(op_escalar);\n  if (iocType === 'cve') {\n    opciones.push(`🩹 \\`parchear\\` → Abrir ticket de patch management (pendiente integración)`);\n  }\n  opciones.push(op_cerrar);\n  return opciones;\n}\nconst opciones_respuesta = buildOpciones(ioc_type, iocClean);\nconst opciones_txt = opciones_respuesta.map(o => `• ${o}`).join('\\n');\n\n// 6.12 DEEP-LINKS según tipo de IOC\n// ⚠ Ajusta estas URLs a tu infraestructura real\nconst WAZUH_UI   = 'https://wazuh.ryoiki';\nconst OPENCTI_UI = 'http://opencti.ryoiki:8080';\n\n// OpenCTI: search global (busca en observables, indicators, malware, etc.)\nlet link_opencti = OPENCTI_UI;\nif (iocClean && iocClean !== 'Ninguno' && iocClean !== 'N/A') {\n  link_opencti = `${OPENCTI_UI}/dashboard/search/knowledge/${encodeURIComponent(iocClean)}?sortBy=_score&orderAsc=false`;\n}\n\n// Wazuh: deep-link al Discover filtrado por id de la alerta.\n// Los paréntesis van URL-encoded para que Discord renderice bien [txt](url).\nconst link_wazuh = inc.id\n  ? `${WAZUH_UI}/app/data-explorer/discover#?_a=(discover:(columns:!(_source),isDirty:!f,sort:!()),metadata:(indexPattern:'wazuh-alerts-*',view:discover))&_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-48h,to:now))&_q=(filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'wazuh-alerts-*',key:id,negate:!f,params:(query:'${inc.id}'),type:phrase),query:(match_phrase:(id:'${inc.id}')))),query:(language:kuery,query:''))`.replace(/\\(/g, '%28').replace(/\\)/g, '%29')\n  : WAZUH_UI;\n\n// 6.13 PREVIEW de la acción automática adaptado al tipo IOC\nlet accion_preview = '';\nif (ia.accion === 'bloquear') {\n  switch (ioc_type) {\n    case 'ip_public':\n    case 'ipv6':\n      accion_preview = `⚙️ **Acción automática:** añadir \\`${iocClean}\\` al alias \\`Bloqueo_SOAR\\` en OPNsense.`;\n      break;\n    case 'domain':\n      accion_preview = `⚙️ **Acción automática prevista:** bloqueo DNS de \\`${iocClean}\\` (pendiente integración Unbound).`;\n      break;\n    case 'hash_sha256':\n    case 'hash_sha1':\n    case 'hash_md5':\n      accion_preview = `⚙️ **Acción automática prevista:** cuarentena del fichero \\`${iocClean.substring(0, 16)}...\\` (pendiente integración EDR).`;\n      break;\n    default:\n      accion_preview = `⚠️ **Bloqueo solicitado pero IOC no actionable automáticamente** (\\`${iocClean}\\`, tipo ${ioc_type}).`;\n  }\n} else if (ia.accion === 'escalar') {\n  accion_preview = `⚙️ **Acción automática:** notificación crítica al canal Tier-2.`;\n} else if (ia.accion === 'ignorar') {\n  accion_preview = `⚙️ **Acción automática:** ninguna. Evento registrado para auditoría.`;\n} else {\n  accion_preview = `⚙️ **Intervención manual requerida.** El analista escoge opción abajo.`;\n}\n\n// ─── 7. OUTPUT — objeto plano listo para Discord/OPNsense ─────────\nreturn [{\n  json: {\n    // — Decisión IA —\n    resumen:            ia.resumen,\n    gravedad:           ia.gravedad,\n    accion:             ia.accion,\n    motivo:             ia.motivo,\n    ioc:                iocClean,\n    ioc_type,\n    ioc_is_actionable,\n    mitigaciones:       ia.mitigaciones,\n    mitigaciones_txt,\n    _razonamiento:      ia._razonamiento,\n    accion_preview,\n\n    // — Incidente Wazuh —\n    agente:             agent.name || 'N/A',\n    agente_ip:          agent.ip   || 'N/A',\n    criticidad_agente,\n    nivel:              rule.level ?? 'N/A',\n    prioridad,\n    descripcion:        rule.description || 'N/A',\n    grupos:             arr(rule.groups),\n    regla_id:           rule.id || 'N/A',\n    frecuencia:         rule.frequency ?? 1,\n    freq_txt,\n    srcip:              srcip_final,\n    srcuser:            user_final,\n    geo,\n    ventana_temporal,\n    timestamp_evento:   inc.timestamp || 'N/A',\n    full_log:           (inc.full_log || 'N/A').substring(0, 500),\n    mitre_ids:          arr(mitre.id),\n    mitre_techs:        arr(mitre.technique),\n    mitre_tacts:        arr(mitre.tactic),\n    compliance_txt,\n    context_txt,\n    context_label,\n\n    // — OpenCTI —\n    has_threats:         clasif.has_threats || false,\n    has_revoked_threats: clasif.has_revoked_threats || false,\n    confirmed_threats:   (clasif.confirmed_threats || []).join(', ') || 'Ninguno',\n    revoked_threats:     (clasif.revoked_threats || []).join(', ')   || 'Ninguno',\n    opencti_txt,\n    cti_score,\n    cti_counts,\n    attack_techs,\n\n    // — Opciones + Links —\n    opciones_txt,\n    link_wazuh,\n    link_opencti,\n    link_mitre,               // string: primer ID\n    link_mitre_txt,           // string: todos los IDs como Markdown links\n\n    // — Meta / debug —\n    parse_ok,\n    downgrade_applied,\n    raw_llm: rawText.substring(0, 300),\n\n    // — Raw objects —\n    incident:       inc,\n    threat_context: tc\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        800
+      ],
+      "id": "ca71da82-0f84-4f29-b95b-2144b1e70cbe",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "rule-bloquear-001",
+                    "leftValue": "={{ $json.accion }}",
+                    "rightValue": "bloquear",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "rule-analista-001",
+                    "leftValue": "={{ $json.accion }}",
+                    "rightValue": "analista",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "rule-ignorar-001",
+                    "leftValue": "={{ $json.accion }}",
+                    "rightValue": "ignorar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "rule-escalar-001",
+                    "leftValue": "={{ $json.accion }}",
+                    "rightValue": "escalar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        768
+      ],
+      "id": "2300d643-7af4-4e2e-8adb-28fbaff0aaaa",
+      "name": "Switch Accion1"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendAndWait",
+        "guildId": {
+          "__rl": true,
+          "value": "1488525117570023545",
+          "mode": "list",
+          "cachedResultName": "Server TFG",
+          "cachedResultUrl": "https://discord.com/channels/1488525117570023545"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1488525118568136856",
+          "mode": "list",
+          "cachedResultName": "alertas-manual",
+          "cachedResultUrl": "https://discord.com/channels/1488525117570023545/1488525118568136856"
+        },
+        "message": "=⚠️ **REVISIÓN MANUAL REQUERIDA** ⚠️ @here\n\n> {{ $('Code in JavaScript1').item.json.resumen }}\n\n**Alerta `{{ $('Code in JavaScript1').item.json.regla_id }}` · Nivel {{ $('Code in JavaScript1').item.json.nivel }}/15 · {{ $('Code in JavaScript1').item.json.gravedad.toUpperCase() }} · {{ $('Code in JavaScript1').item.json.ventana_temporal }}**\n\n**Incidente**\n- {{ $('Code in JavaScript1').item.json.descripcion }}\n- Agente: `{{ $('Code in JavaScript1').item.json.agente }}` ({{ $('Code in JavaScript1').item.json.criticidad_agente }})\n- Categorías: `{{ $('Code in JavaScript1').item.json.grupos }}`\n- Frecuencia: {{ $('Code in JavaScript1').item.json.freq_txt }}\n- Origen: `{{ $('Code in JavaScript1').item.json.srcip}}` — {{ $('Code in JavaScript1').item.json.geo || $('Code in JavaScript1').item.json.incident.data.command}} · Usuario: `{{ $('Code in JavaScript1').item.json.srcuser }}`\n\n{{ $('Code in JavaScript1').item.json.context_txt }}\n\n**IOC** (`{{ $('Code in JavaScript1').item.json.ioc_type }}`): `{{ $('Code in JavaScript1').item.json.ioc }}`\n\n**🧠 Motivo IA:** {{ $('Code in JavaScript1').item.json.motivo }}\n\n**🔍 CTI:** {{ $('Code in JavaScript1').item.json.opencti_txt }}\nTécnicas: {{ $('Code in JavaScript1').item.json.attack_techs }} · Tácticas: {{ $('Code in JavaScript1').item.json.mitre_tacts }}\n\n**🛡️ Mitigaciones:**\n{{ $('Code in JavaScript1').item.json.mitigaciones_txt }}\n\n**📋 Compliance:** {{ $('Code in JavaScript1').item.json.compliance_txt }}\n\n\n**🔗** [🛰️ Wazuh](<{{ $('Code in JavaScript1').item.json.link_wazuh }}>) · [🧠 OpenCTI](<{{ $('Code in JavaScript1').item.json.link_opencti }}>) · ⚔️ {{ $('Code in JavaScript1').item.json.link_mitre_txt }}\n\n**Responde con una palabra:**\n{{ $('Code in JavaScript1').item.json.opciones_txt }}",
+        "responseType": "customForm",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "ACCION A REALIZAR",
+              "fieldType": "dropdown",
+              "defaultValue": "TEST",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "bloquear"
+                  },
+                  {
+                    "option": "escalar"
+                  },
+                  {
+                    "option": "cerrar"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        752,
+        480
+      ],
+      "id": "1dfad69c-0e77-472e-ae4f-efa0fe79b087",
+      "name": "Discord Gestion manual",
+      "webhookId": "0d0d85ab-40bf-40c0-a6c5-afd304cf5f64",
+      "credentials": {
+        "discordBotApi": {
+          "id": "KwLxVycYWx44LKvR",
+          "name": "Discord Bot account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.ryoiki:5678",
+            "user-agent": "curl/8.14.1",
+            "accept": "*/*",
+            "content-type": "application/json",
+            "content-length": "1081"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "timestamp": "2026-04-25T18:27:20.874+0200",
+            "rule": {
+              "level": 7,
+              "description": "Successful sudo to ROOT executed.",
+              "id": "550",
+              "mitre": {
+                "id": [
+                  "T1548.003"
+                ],
+                "tactic": [
+                  "Privilege Escalation",
+                  "Defense Evasion"
+                ],
+                "technique": [
+                  "Sudo and Sudo Caching"
+                ]
+              },
+              "firedtimes": 2,
+              "mail": false,
+              "groups": [
+                "syslog",
+                "sudo"
+              ],
+              "pci_dss": [
+                "10.2.5",
+                "10.2.2"
+              ],
+              "gpg13": [
+                "7.6",
+                "7.8",
+                "7.13"
+              ],
+              "gdpr": [
+                "IV_32.2"
+              ],
+              "hipaa": [
+                "164.312.b"
+              ],
+              "nist_800_53": [
+                "AU.14",
+                "AC.7",
+                "AC.6"
+              ],
+              "tsc": [
+                "CC6.8",
+                "CC7.2",
+                "CC7.3"
+              ]
+            },
+            "agent": {
+              "id": "001",
+              "name": "n8n-agent",
+              "ip": "10.0.0.4"
+            },
+            "manager": {
+              "name": "wazuh"
+            },
+            "id": "1777134440.518769",
+            "full_log": "2026-04-25T18:27:20.584724+02:00 n8n sudo:     root : TTY=pts/1 ; PWD=/home/manu ; USER=root ; COMMAND=/usr/bin/tee -a /tmp/soar-demo/fichero.txt",
+            "predecoder": {
+              "program_name": "sudo",
+              "timestamp": "2026-04-25T18:27:20.584724+02:00"
+            },
+            "decoder": {
+              "parent": "sudo",
+              "name": "sudo",
+              "ftscomment": "First time user executed the sudo command"
+            },
+            "data": {
+              "srcuser": "root",
+              "dstuser": "root",
+              "tty": "pts/1",
+              "pwd": "/home/manu",
+              "command": "/usr/bin/tee -a /tmp/soar-demo/fichero.txt"
+            },
+            "location": "/var/log/auth.log"
+          },
+          "webhookUrl": "http://n8n.ryoiki:5678/webhook-test/wazuh-poc2",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OPNsense Auto Bloqueo": {
+      "main": [
+        [
+          {
+            "node": "Discord Auto Bloqueado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Respuesta Manual": {
+      "main": [
+        [
+          {
+            "node": "OPNsense Manual Bloqueo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord Escalacion Manual",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord Cerrado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OPNsense Manual Bloqueo": {
+      "main": [
+        [
+          {
+            "node": "Discord Bloqueo Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "OpenCTI HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificador1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenCTI HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Clasificador1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificador1": {
+      "main": [
+        [
+          {
+            "node": "Ollama1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Switch Accion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Accion1": {
+      "main": [
+        [
+          {
+            "node": "OPNsense Auto Bloqueo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord Gestion manual",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord Audit Ignorar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discord Escalacion Critica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Gestion manual": {
+      "main": [
+        [
+          {
+            "node": "Switch Respuesta Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fee3f09b-ccc5-4bbd-85c3-dc676a8afc73",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c1f16d41b4cd485cd2eb7daf921f03c7452f28742444bc28b7a61ef0582324f6"
+  },
+  "id": "861f8h47yrov9cwf",
+  "tags": []
+}

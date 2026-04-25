@@ -230,8 +230,9 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "4c2029a6d562c716",
+  "active": "5a64f9a4cdfa85a7",
   "lastOpenFiles": [
+    "TFG/N8N_Folder/SOAR Inteligente.json",
     "TFG/imgs-n8n/1-1_captura_simulacion.png",
     "TFG/imgs-n8n/1-2_WazuhWebhook.png",
     "TFG/imgs-n8n/1-3_captura_LLM.png",
@@ -244,7 +245,6 @@
     "TFG/imgs-n8n/1-8_alias_bloqueo_manual.png",
     "TFG/imgs-n8n/1-8_form_bloqueo_manual.png",
     "TFG/imgs-n8n/1-8_bloqueo_manual.png",
-    "TFG/imgs-n8n/1-7_audit.png",
     "TFG/OPNsense.md",
     "TFG/N8N_Folder/N8N.md",
     "TFG/N8N.md",
