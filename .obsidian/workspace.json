@@ -37,12 +37,14 @@
             "id": "4c2029a6d562c716",
             "type": "leaf",
             "state": {
-              "type": "image",
+              "type": "markdown",
               "state": {
-                "file": "TFG/imgs-n8n/1-3_captura_LLM.png"
+                "file": "TFG/N8N_Folder/Bot SOC Discord Documentacion.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-image",
-              "title": "1-3_captura_LLM"
+              "icon": "lucide-file",
+              "title": "Bot SOC Discord Documentacion"
             }
           }
         ],
@@ -103,7 +105,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 276.5
+    "width": 415.5
   },
   "right": {
     "id": "00182e5365f0eb86",
@@ -230,12 +232,14 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "5a64f9a4cdfa85a7",
+  "active": "a81af68fcb7121e0",
   "lastOpenFiles": [
+    "TFG/N8N_Folder/Bot SOC Discord Documentacion.md",
+    "TFG/N8N_Folder/Bot SOC Discord Documentacion.md",
+    "TFG/imgs-n8n/1-3_captura_LLM.png",
     "TFG/N8N_Folder/SOAR Inteligente.json",
     "TFG/imgs-n8n/1-1_captura_simulacion.png",
     "TFG/imgs-n8n/1-2_WazuhWebhook.png",
-    "TFG/imgs-n8n/1-3_captura_LLM.png",
     "TFG/N8N_Folder/WorkFlow SOAR.md",
     "TFG/N8N_Folder/WorkFlow SOAR.md",
     "TFG/imgs-n8n/1-8_cerrado_manual.png",
@@ -265,7 +269,6 @@
     "TFG/imgs-openctiDOC",
     "TFG/OpenCTI_Folder/opencti-control",
     "TFG/OpenCTI_Folder/connectors/docker-compose-connectors-ALL.yml",
-    "TFG/OpenCTI_Folder/connectors/docker-compose-connectors.yml",
     "TFG/Configuracion VM Router.md",
     "TFG/OpenCTI.md",
     "README.md",
