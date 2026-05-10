@@ -42,7 +42,6 @@ flowchart TD
 🟥 bloqueos · 🟧 escalaciones · ⬜ cierres
 
 ---
----
 
 ## Detalles técnicos del workflow
 
