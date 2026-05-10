@@ -11,7 +11,7 @@
 
 # SOAR Inteligente
 
-El Workflow que recibe alertas de Wazuh, las analiza con una IA local (10.10.10.3) (`qwen2.5:14b`) enriquecida con inteligencia de amenazas de OpenCTI, y decide qué hacer con cada una. Hay seis caminos posibles.
+El workflow recibe alertas de Wazuh, las analiza con una IA local (10.10.10.3) (`qwen2.5:14b`) enriquecida con inteligencia de amenazas de OpenCTI, y decide qué hacer con cada una. Hay seis caminos posibles.
 
 ---
 
@@ -42,6 +42,118 @@ flowchart TD
 🟥 bloqueos · 🟧 escalaciones · ⬜ cierres
 
 ---
+---
+
+## Detalles técnicos del workflow
+
+El workflow consta de **18 nodos** organizados en cuatro fases secuenciales: ingesta, enriquecimiento, decisión y acción. A continuación se documentan las piezas cuya lógica trasciende el flujo de alto nivel mostrado en el diagrama anterior.
+
+### Fase 1 — Ingesta y aplanado de alertas
+
+**Nodo `Webhook`** — punto de entrada del workflow. Expone el endpoint `POST /webhook/wazuh-poc2` al que el manager de Wazuh envía las alertas mediante el módulo `<integration>` (ver anexo *Wazuh*). El payload recibido es la alerta JSON completa de Wazuh con la estructura nativa del SIEM.
+
+**Nodo `Code in JavaScript` (Extractor de IoCs)** — primera pieza de lógica del flujo. Su misión es transformar el payload anidado de Wazuh en algo procesable por el LLM y construir la consulta a OpenCTI:
+
+1. **Aplanado del objeto**: la alerta de Wazuh tiene una estructura profundamente anidada (`rule.mitre.id[0]`, `data.aws.userIdentity`, etc.). El nodo recorre recursivamente el árbol y produce un objeto plano del tipo `{"rule.mitre.id[0]": "T1110", "rule.mitre.id[1]": "T1078"}`. Esto facilita las búsquedas posteriores.
+2. **Extracción de IoCs**: identifica todas las direcciones IP, dominios, hashes y CVEs presentes en cualquier punto del payload, descartando IPs privadas y de loopback.
+3. **Construcción de la query GraphQL combinada**: ensambla una única consulta GraphQL contra la API de OpenCTI que pregunta por todos los IoCs extraídos en una sola operación, evitando múltiples llamadas. La estrategia "una consulta por alerta" reduce drásticamente la latencia del flujo.
+
+### Fase 2 — Enriquecimiento con OpenCTI
+
+**Nodo `OpenCTI HTTP Request`** — envía la query GraphQL construida en la fase anterior contra `http://opencti.ryoiki:8080/graphql`. Devuelve los objetos STIX relacionados con los IoCs detectados: indicadores activos o revocados, malware vinculado, actores de amenaza asociados, técnicas MITRE referenciadas y mitigaciones recomendadas.
+
+**Nodo `Clasificador1` (Code in JavaScript)** — procesa la respuesta de OpenCTI y construye el contexto que se pasará al LLM. Sus responsabilidades:
+
+- Normalizar los indicadores devueltos por OpenCTI (que pueden venir con esquemas diferentes según su tipo).
+- Distinguir entre amenazas **activas** y **revocadas** (un indicador puede haber estado vigente en el pasado pero ya no representar amenaza actual; esta distinción es crítica para la decisión posterior).
+- Agregar los datos en un único objeto resumen con campos como `has_threats`, `confirmed_threats`, `has_revoked_threats`, `summary.total_ip_indicators`, etc.
+- Marcar el campo `skip=true` si la alerta no aporta IoCs procesables y debe abortarse para no consumir tokens del LLM innecesariamente.
+
+**Nodo `If`** — comprueba el flag `skip`. Si la alerta no contiene indicadores accionables (por ejemplo, evento de bajo nivel sin IPs ni hashes), el flujo termina aquí sin invocar al LLM. Esta salvaguarda es importante porque cada inferencia del modelo cuantizado tarda decenas de segundos.
+
+### Fase 3 — Decisión mediante LLM local
+
+**Nodo `Ollama1`** — invoca el modelo de lenguaje local servido mediante Ollama. La configuración (`temperature: 0.2`, `top_p: 0.9`, `format: json`) está deliberadamente optimizada para esta tarea:
+
+- **Temperatura `0.2`**: muy baja para minimizar la aleatoriedad. El razonamiento de un analista de Nivel 1 sobre alertas debe ser **reproducible**: la misma alerta debe producir la misma decisión cada vez.
+- **`top_p: 0.9`**: muestreo nuclear conservador. Reduce todavía más la varianza sin volver al modelo completamente determinista.
+- **`format: json`**: fuerza al modelo a devolver JSON válido directamente. Esta es una característica nativa de Ollama que evita tener que parsear texto libre o pelearse con respuestas malformadas, y constituye una de las tres palancas de la "envoltura defensiva" mencionada en el apartado 3.2.5.C de la memoria.
+
+El prompt que recibe el modelo (recogido íntegramente más abajo) está estructurado como un **árbol de decisión determinista**: el LLM no debe "razonar libremente" sino seguir una secuencia mecánica de comprobaciones (los STOPs P1-P3 y las matrices A-F). El campo `_razonamiento` de la respuesta JSON obliga al modelo a hacer explícitas sus comprobaciones, lo que actúa como mecanismo anti-alucinación: el modelo no puede saltarse pasos sin que sea evidente en el log.
+
+**Nodo `Code in JavaScript1`** — saneamiento de la respuesta del modelo. Equivalente al nodo de saneamiento del bot conversacional descrito en el anexo *Bot SOC Discord*. Su función aquí es asegurar que el campo `accion` del JSON devuelto por el LLM tiene uno de los cuatro valores admitidos (`bloquear`, `analista`, `ignorar`, `escalar`) y extraer los campos relevantes para los nodos posteriores.
+
+### Fase 4 — Ramas de acción
+
+**Nodo `Switch Accion1`** — bifurca el flujo según la decisión del LLM. Las cuatro ramas son:
+
+| Rama del switch | Próximo nodo                              | Resultado                                                  |
+| :-------------- | :---------------------------------------- | :--------------------------------------------------------- |
+| `bloquear`      | `OPNsense Auto Bloqueo` + Discord         | Bloqueo automático sin intervención (caso 1)               |
+| `escalar`       | `Discord Escalacion Critica`              | Aviso `@here` a Tier-2 (caso 2)                            |
+| `ignorar`       | `Discord Audit Ignorar`                   | Registro silencioso de auditoría (caso 3)                  |
+| `analista`      | `Discord Gestion manual`                  | Pregunta interactiva al analista (casos 4, 5, 6)           |
+
+**Nodo `OPNsense Auto Bloqueo` (y `OPNsense Manual Bloqueo`)** — peticiones HTTP autenticadas mediante *HTTP Basic Auth* contra la API REST de OPNsense:
+
+```
+POST https://opnsense.ryoiki/api/firewall/alias_util/add/Bloqueo_SOAR
+```
+
+Esta operación añade la IP atacante al alias `Bloqueo_SOAR` documentado en el anexo *OPNsense*. La llamada es atómica: el alias se actualiza en memoria sin necesidad de recargar el conjunto de reglas, lo que permite que el bloqueo entre en vigor en milisegundos.
+
+**Nodo `Discord Gestion manual`** — cuando la decisión del LLM es `analista`, este nodo publica un formulario interactivo en Discord con tres botones: *bloquear*, *escalar* y *cerrar*. La respuesta del analista vuelve al workflow a través de un webhook de retorno, capturado por el nodo `Switch Respuesta Manual`.
+
+**Nodo `Switch Respuesta Manual`** — lee el campo `data["ACCION A REALIZAR"]` del formulario y bifurca a una de las tres ramas finales:
+
+- `bloquear` → `OPNsense Manual Bloqueo` + `Discord Bloqueo Manual`
+- `escalar` → `Discord Escalacion Manual`
+- `cerrar` → `Discord Cerrado`
+
+Los siete nodos `Discord` distintos (Auto Bloqueado, Bloqueo Manual, Escalacion Manual, Cerrado, Audit Ignorar, Escalacion Critica, Gestion manual) usan canales y formatos diferenciados: bloqueos van con embed verde, escalaciones críticas con mención `@here` y color rojo, auditorías con embed gris sin notificación, etc. Esta diferenciación visual permite al SOC identificar de un vistazo qué tipo de evento ha procesado el flujo.
+
+### Resumen de la cadena de procesamiento
+
+```
+Wazuh
+  │
+  ▼
+Webhook → Extractor IoCs → OpenCTI GraphQL → Clasificador → If (skip?)
+                                                                │
+                                                                ▼
+                                                            Ollama LLM
+                                                                │
+                                                                ▼
+                                                          Saneamiento JS
+                                                                │
+                                                                ▼
+                                                          Switch Acción
+                                                                │
+                                          ┌─────────────────────┼─────────────────────┐
+                                          │                     │                     │
+                                       bloquear              escalar               ignorar
+                                          │                     │                     │
+                                          ▼                     ▼                     ▼
+                                      OPNsense API           Discord               Discord
+                                      + Discord            (@here Tier-2)         (auditoría)
+                                          │
+                                          ▼
+                                       analista
+                                          │
+                                          ▼
+                                   Formulario Discord
+                                          │
+                              ┌───────────┼───────────┐
+                              │           │           │
+                           bloquear    escalar    cerrar
+                              │           │           │
+                              ▼           ▼           ▼
+                       OPNsense API   Discord     Discord
+                       + Discord    (Tier-2)    (cierre)
+```
+
+---
+
 
 ## Los seis casos demostrados
 
@@ -78,7 +190,7 @@ Tras ocho intentos fallidos en menos de dos minutos, Wazuh genera la alerta de f
 
 ### Caso 2 — Escalación crítica
 
-Primero para este caso tendremos que modificar el archivo de reglas locales para poder hacer creer a wazuh que es una alerta extremadamente critica, editando el siguiente archivo y añadiendo este contenido:
+Para reproducir este caso se incorporan dos reglas personalizadas al manager de Wazuh que elevan a nivel crítico la detección de modificaciones de ficheros con contenido típico de *webshells*. Se editan los siguientes ficheros y se aplican los reinicios correspondientes:
 
 **/var/ossec/etc/rules/local_rules.xml**
 
@@ -98,16 +210,16 @@ Primero para este caso tendremos que modificar el archivo de reglas locales para
   </rule>
 </group>
 ```
-A continuacion reiniciaremos el manager para actualizar las reglas
+A continuación se reinicia el manager para actualizar las reglas
 ```bash
 sudo systemctl restart wazuh-manager
 ```
-Ahora en el agente que recogera el evento añadimos la siguiente linea:
+Ahora en el agente que recogerá el evento se añade la siguiente línea:
 **/var/ossec/etc/ossec.conf**   dentro de `<syscheck>`
 ```xml
 <directories check_all="yes" realtime="yes" report_changes="yes">/var/www/html</directories>
 ```
-Reiniciar el agente:
+Tras la edición, se reinicia el agente para que aplique la nueva configuración:
 ```bash
 sudo systemctl restart wazuh-agent
 ```
@@ -170,11 +282,10 @@ Wazuh dispara la misma alerta de fuerza bruta (regla 5712, nivel 10), pero al co
 **Qué decide el analista:** elige `bloquear` (la actividad es claramente hostil aunque no esté en bases de inteligencia conocidas).
 
 **Cómo termina:** la IP se añade al alias del firewall y se publica la confirmación en Discord.
-![BloqManual](../imgs-n8n/1-8_bloqueo_manual.png)
-![BloqManual](../imgs-n8n/1-8_form_bloqueo_manual.png)
-![BloqManual](../imgs-n8n/1-8_alias_bloqueo_manual.png)
-![BloqManual](../imgs-n8n/1-8_alerta_bloqueo_manual.png)
-
+![Mensaje inicial en Discord notificando que se requiere decisión del analista](../imgs-n8n/1-8_bloqueo_manual.png)
+![Formulario interactivo con tres opciones: bloquear, escalar o cerrar](../imgs-n8n/1-8_form_bloqueo_manual.png)
+![Resultado: IP añadida al alias Bloqueo_SOAR de OPNsense](../imgs-n8n/1-8_alias_bloqueo_manual.png)
+![Confirmación final en Discord tras aplicar el bloqueo manual](../imgs-n8n/1-8_alerta_bloqueo_manual.png)
 
 
 ---
@@ -208,7 +319,7 @@ En el agente que recogera el evento añadimos la siguiente linea:
 ```xml
 <directories check_all="yes" realtime="yes" report_changes="yes">/tmp/soar-demo</directories>
 ```
-Reiniciar el agente:
+Tras la edición, se reinicia el agente para que aplique la nueva configuración:
 ```bash
 sudo systemctl restart wazuh-agent
 ```
@@ -235,7 +346,7 @@ Wazuh detecta el cambio de integridad (regla 550, nivel 7).
 # Prompt 
 
 ```plaintext
-=Eres un analista SOC Tier-2 senior, experto en Wazuh y en todas sus familias de alertas (endpoint, red, cloud, identidad, contenedores, vulnerabilidades). Evalúas UN incidente y decides la respuesta adecuada independientemente de la plataforma origen. Respondes EXCLUSIVAMENTE con un JSON válido. Sin markdown, sin backticks, sin texto antes ni después.
+Eres un analista SOC Tier-2 senior, experto en Wazuh y en todas sus familias de alertas (endpoint, red, cloud, identidad, contenedores, vulnerabilidades). Evalúas UN incidente y decides la respuesta adecuada independientemente de la plataforma origen. Respondes EXCLUSIVAMENTE con un JSON válido. Sin markdown, sin backticks, sin texto antes ni después.
 
 ═══════════════════════════════════════════════════════════════════
   DATOS DEL INCIDENTE (Wazuh)
@@ -496,3 +607,13 @@ Las mitigaciones deben salir de "Mitigaciones MITRE sugeridas" (máx 3). Si no h
 
 Responde AHORA con el JSON para el incidente de arriba.
 ```
+
+---
+
+## Aportación arquitectónica al proyecto
+
+Este flujo SOAR constituye el ciclo de inteligencia completo del proyecto: las alertas del sensor interno (Wazuh) se enriquecen con la inteligencia centralizada (OpenCTI) y disparan acciones automáticas o asistidas sobre la defensa perimetral (OPNsense), cerrando así el bucle "detectar → contextualizar → responder" planteado como objetivo general en el apartado 2.1 de la memoria.
+
+La decisión arquitectónica de delegar el razonamiento en un modelo de lenguaje local —pese a las limitaciones documentadas en el apartado 4.1 (Limitaciones)— responde al principio de soberanía del dato: los datos de las alertas (que pueden contener información sensible de la red interna, nombres de usuario, paths de ficheros) no abandonan en ningún momento el entorno controlado del laboratorio. Una solución equivalente basada en LLMs cloud (GPT, Claude, Gemini) habría enviado esta telemetría a infraestructuras de terceros, comprometiendo precisamente uno de los principios fundacionales del proyecto.
+
+La fragilidad del flujo ante cambios en el esquema de Wazuh, documentada como lección de ingeniería en el apartado 3.2.5.C, motiva las recomendaciones de validación de esquemas recogidas en el capítulo 6 (Futuras líneas de trabajo).
