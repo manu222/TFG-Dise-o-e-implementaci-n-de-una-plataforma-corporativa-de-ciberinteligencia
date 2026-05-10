@@ -34,9 +34,23 @@
               "icon": "lucide-file",
               "title": "README"
             }
+          },
+          {
+            "id": "efe1050419121663",
+            "type": "leaf",
+            "state": {
+              "type": "split-diff-view",
+              "state": {
+                "aFile": "TFG/N8N_Folder/WorkFlow SOAR.md",
+                "bFile": "TFG/N8N_Folder/WorkFlow SOAR.md",
+                "aRef": ""
+              },
+              "icon": "diff",
+              "title": "Diff: WorkFlow SOAR  (Working Tree)"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -220,8 +234,11 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "a81af68fcb7121e0",
+  "active": "efe1050419121663",
   "lastOpenFiles": [
+    "conflict-files-obsidian-git.md",
+    "README.md",
+    "TFG/N8N_Folder/WorkFlow SOAR.md",
     "TFG/imgs-n8n/proxmox-n8n.png",
     "TFG/imgs-n8n/confred-n8n.png",
     "TFG/imgs-n8n/1-5_discord_autoblock.png",
@@ -240,8 +257,6 @@
     "Pasted image 20260223185457.png",
     "Pasted image 20260223185443.png",
     "Pasted image 20260203173015.png",
-    "Pasted image 20251220200856.png",
-    "TFG/N8N_Folder/WorkFlow SOAR.md",
     "TFG/Configuracion VM Router.md",
     "TFG/N8N_Folder/Discord Bot.json",
     "TFG/N8N_Folder/Discord Bot hilos privados(1).json",
@@ -260,7 +275,6 @@
     "TFG/MISC.md",
     "TFG/WAZUH.md",
     "TFG/OpenCTI.md",
-    "README.md",
     "TFG/Infra/Network/NET.md",
     "TFG/Infra/Network/FireWalling.md",
     "TFG/DUDAS.md",
