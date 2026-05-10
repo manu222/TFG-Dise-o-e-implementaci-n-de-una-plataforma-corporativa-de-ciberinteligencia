@@ -201,7 +201,7 @@ class MultiFeedConnector:
         return objects
 
     def run(self):
-        self.helper.log_info("Iniciando Motor TFG Multi-Feed (V1.2 IP Fix)...")
+        self.helper.log_info("Iniciando TFG Multi-Feed")
         while True:
             try:
                 timestamp = int(time.time())

@@ -1,3 +1,19 @@
+
+# Propósito y contexto
+
+Este anexo documenta el script `opencti-control`, una herramienta de administración personalizada desarrollada en Bash para facilitar la gestión del ciclo de vida del *stack* OpenCTI desplegado en el laboratorio. Su existencia, motivación y rol arquitectónico se justifican en el apartado 3.2.2.B (Descripción técnica del despliegue) de la memoria.
+## Motivación
+
+OpenCTI no es una aplicación monolítica: se compone de dos capas lógicas separadas en dos directorios distintos del sistema de archivos, cada una con su propio `docker-compose.yml`:
+
+- **Capa Core**: bases de datos (Elasticsearch, Redis, MinIO, RabbitMQ) y la propia plataforma OpenCTI.
+- **Capa de Conectores**: *workers* internos y conectores propios (Multi-Feed, Gemini) que ingieren y enriquecen inteligencia.
+
+La gestión manual requiere navegar entre directorios y recordar los flags adecuados de `docker compose` en cada caso. Más relevante: cuando se modifica el código de un conector custom (por ejemplo, los *feeds* del Multi-Feed), interesa **reiniciar únicamente esa capa** sin tocar las bases de datos, porque reiniciar el Core supone esperar a la re-indexación de Elasticsearch y volver a hacer recachés de Redis, lo que puede tardar varios minutos.
+
+`opencti-control` resuelve estos dos problemas: unifica la administración de ambas capas bajo una sola interfaz de comandos y permite operar sobre cada una de forma independiente.
+
+---  
 # Documentación: `opencti-control`
 
 **Tipo:** Script de gestión Bash  
@@ -44,8 +60,8 @@ ALLOWED_USER="opencti_svc"       # Usuario no-root autorizado a ejecutar el scri
 
 El script solo puede ejecutarse como **`root`** o como el usuario definido en `ALLOWED_USER` (`opencti_svc` por defecto). Cualquier otro usuario recibe un error y el script termina inmediatamente:
 
-```
-⛔ ERROR CRÍTICO: Permiso denegado.
+```text
+X ERROR CRÍTICO: Permiso denegado.
 ```
 
 Para dar permisos de ejecución al usuario `opencti_svc` sin necesidad de `sudo` completo, puedes usar `sudoers`:
@@ -75,6 +91,7 @@ Levanta el sistema en orden correcto en tres fases:
 [3/3] Conectores y Workers (docker compose up -d)
 ```
 
+> [!NOTE]
 > El retardo de 15 segundos es intencional: los conectores dependen de que OpenCTI y sus bases de datos (Elasticsearch, MinIO, Redis, RabbitMQ) estén operativos antes de intentar iniciar.
 
 ---
@@ -195,7 +212,8 @@ Equivale a `docker compose up -d --build` en el directorio de conectores. El fla
 - Después de cambiar el `Dockerfile` de un conector.
 - Después de actualizar el `docker-compose.yml` de los conectores
 
-> Los conectores que no tienen cambios en su imagen **no se reconstruyen** (Docker usa la caché), por lo que el comando es seguro de ejecutar aunque solo hayas cambiado un único conector.
+>[!NOTE] 
+>Los conectores que no tienen cambios en su imagen **no se reconstruyen** (Docker usa la caché), por lo que el comando es seguro de ejecutar aunque solo hayas cambiado un único conector.
 
 ---
 
@@ -256,11 +274,11 @@ opencti-control restart
 
 ## Mensajes de Error
 
-| Mensaje | Causa | Solución |
-|---|---|---|
-| `⛔ ERROR CRÍTICO: Permiso denegado.` | El usuario actual no es `root` ni `opencti_svc` | Ejecutar como usuario correcto o con `sudo` |
-| `⛔ Error: No se encuentran los directorios.` | `CORE_DIR` o `CONN_DIR` no existen | Verificar rutas en las variables de configuración del script |
-| `Uso: opencti-control {start\|stop\|...}` | Comando no reconocido | Revisar la lista de comandos válidos |
+| Mensaje                                                                                              | Causa                                           | Solución                                                     |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| `X ERROR CRÍTICO: Permiso denegado.`                                                                 | El usuario actual no es `root` ni `opencti_svc` | Ejecutar como usuario correcto o con `sudo`                  |
+| `X Error: No se encuentran los directorios.`                                                         | `CORE_DIR` o `CONN_DIR` no existen              | Verificar rutas en las variables de configuración del script |
+| `Uso: opencti-control {start\|stop\|restart\|status\|logs-core\|logs-connectors\|update-connectors}` | Comando no reconocido                           | Revisar la lista de comandos válidos                         |
 
 ---
 
@@ -275,3 +293,6 @@ opencti-control logs-core           → Logs en vivo del Core (Ctrl+C para salir
 opencti-control logs-connectors     → Logs en vivo de Conectores (Ctrl+C para salir)
 opencti-control update-connectors   → Reconstruye imágenes y reinicia Conectores
 ```
+
+
+---

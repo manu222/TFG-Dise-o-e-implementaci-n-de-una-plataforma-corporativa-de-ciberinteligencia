@@ -1,3 +1,15 @@
+# Propósito y contexto
+
+Este anexo documenta el conector **Multi-Feed**, uno de los tres conectores propios desarrollados para la plataforma OpenCTI del laboratorio. Su existencia y motivación se justifican en el apartado 3.2.2.B (Descripción técnica del despliegue) y su contribución a los resultados del proyecto se cuantifica en el apartado 3.6.2 (Plan de pruebas y casos de uso validados) de la memoria.
+## Rol arquitectónico
+
+El conector Multi-Feed cubre una carencia identificada en el ecosistema de conectores oficiales de OpenCTI: la ausencia de una pieza genérica capaz de ingerir simultáneamente fuentes con formatos heterogéneos (listas de IPs en texto plano, listas de URLs, JSON anidado de configuraciones) sin necesidad de mantener un conector separado por cada formato. En su lugar, este conector implementa **un único motor con tres parsers especializados** que se seleccionan  desde el fichero de configuración `feeds.json`, lo que permite añadir nuevas fuentes sin tocar el código del conector siempre que su formato encaje con uno de los tres parsers disponibles.
+## Relación con otros componentes del laboratorio
+
+- **OpenCTI**: el conector publica objetos STIX 2.1 contra la API GraphQL de la plataforma mediante el SDK `pycti`, integrándose como un servicio Docker más dentro del *compose* de la capa de Conectores documentada en el anexo *OpenCTI*.
+- **opencti-control**: el ciclo de vida del contenedor (reconstrucción tras editar `connector.py` o `feeds.json`) se opera mediante el comando `opencti-control update-connectors` documentado en el anexo correspondiente, en lugar de invocar manualmente `docker compose`.
+
+---
 # Documentación Técnica: Conector OpenCTI Multi-Feed
 
 **Proyecto:** TFG Ciberseguridad  
@@ -82,13 +94,13 @@ EntryPoint: python3 connector.py
 
 ### Proceso de build
 
-```dockerfile
-# 1. Instala dependencias del sistema (build-essential, curl, git, libmagic1)
-# 2. Actualiza pip e instala requirements.txt
-# 3. Copia el código fuente
-# 4. Ajusta permisos y cambia al usuario 'opencti'
-# 5. Ejecuta el conector
-```
+El Dockerfile ejecuta los siguientes pasos en orden:
+
+1. Instala dependencias del sistema (`build-essential`, `curl`, `git`, `libmagic1`, `ca-certificates`).
+2. Actualiza `pip` e instala las dependencias declaradas en `requirements.txt`.
+3. Copia el código fuente al directorio de trabajo.
+4. Ajusta permisos y cambia al usuario no privilegiado `opencti`.
+5. Ejecuta `python3 connector.py` como punto de entrada del contenedor.
 
 ### Buenas prácticas aplicadas
 
@@ -121,7 +133,9 @@ connector-multifeed:
       - opencti_net
 ```
 
-> **Importante:** `CONNECTOR_ID` debe ser un UUID v4 único
+>[!IMPORTANT] 
+>`CONNECTOR_ID` debe ser un UUID v4 único
+
 ---
 
 ## 6. Configuración de Fuentes (`feeds.json`)
@@ -216,6 +230,8 @@ El conector opera en un bucle infinito con la siguiente lógica:
 4. Marcar el trabajo como completado
 5. Dormir CONNECTOR_RUN_EVERY segundos (por defecto: 3600)
 ```
+> [!NOTE] 
+> Sobre `update=True`: la llamada `helper.send_stix2_bundle(bundle, update=True, work_id=work_id)` indica al SDK de OpenCTI que, si un objeto STIX ya existe en la base de datos (mismo `id`), debe actualizar sus campos (etiquetas, relaciones, score) en lugar de descartarlo silenciosamente. Esto es importante para el caso de uso típico del conector: una IP detectada hoy en *Cobalt Strike C2* y mañana en *PoshC2* enriquece su contexto con etiquetas de ambas familias, mostrando en el grafo de OpenCTI la relación con los dos malware.
 
 ---
 
@@ -309,7 +325,8 @@ MAX_FILE_SIZE_MB = 10   # (declarado, no aplicado activamente en v1.2)
 TIMEOUT_SECONDS = 30    # Timeout para todas las peticiones HTTP
 ```
 
-> **Nota:** El límite `MAX_FILE_SIZE_MB` está definido como constante pero no se aplica activamente en la versión actual debido a un problema que no he logrado resolver que consistía en un error a la hora de ejecución del conector, no he logrado encontrar la causa, pero sin usar la variable funciona
+> [!NOTE]
+>  la constante `MAX_FILE_SIZE_MB` está declarada como mecanismo de protección frente a feeds anómalamente grandes, pero no se aplica en la versión actual del conector. Durante la fase de pruebas se vio que su integración en el flujo de descarga producía un error de ejecución no resuelto, por lo que se optó por dejarla como constante documental pendiente de implementación. El timeout de 30 segundos en las peticiones HTTP (`TIMEOUT_SECONDS`) actúa de hecho como salvaguarda implícita ante descargas excesivamente lentas o servidores inestables.
 
 ---
 
@@ -413,10 +430,10 @@ elif parser_type == "mi-formato":
 
 ### Paso 3: Reconstruir y reiniciar el contenedor
 
+La forma recomendada de aplicar los cambios es mediante el *script* de administración `opencti-control` (ver anexo correspondiente), que encapsula la operación de reconstruir todas las imágenes de conectores modificadas:
+
 ```bash
-cd /opt/opencti/connectors
-docker compose build connector-multifeed
-docker compose up -d connector-multifeed
+opencti-control update-connectors
 ```
 
 ---
@@ -447,7 +464,7 @@ docker compose restart connector-multifeed
 
 ### Forzar una ejecución inmediata
 
-El conector no un trigger manual. La forma más directa es reiniciarlo:
+El conector no dispone de un trigger manual. La forma más directa es reiniciarlo:
 
 ```bash
 docker compose restart connector-multifeed

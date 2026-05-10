@@ -25,44 +25,18 @@
             "id": "8ade0252f5494043",
             "type": "leaf",
             "state": {
-              "type": "image",
-              "state": {
-                "file": "TFG/imgs-n8n/1-5_discord_autoblock.png"
-              },
-              "icon": "lucide-image",
-              "title": "1-5_discord_autoblock"
-            }
-          },
-          {
-            "id": "17058ccf9c1f9c56",
-            "type": "leaf",
-            "state": {
               "type": "markdown",
               "state": {
-                "file": "TFG/N8N_Folder/Bot SOC Discord Documentacion.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Bot SOC Discord Documentacion"
-            }
-          },
-          {
-            "id": "a1cdd836c4fa3565",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "TFG/N8N_Folder/WorkFlow SOAR.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "WorkFlow SOAR"
+              "title": "README"
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -231,7 +205,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 391.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -246,48 +220,49 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "a1cdd836c4fa3565",
+  "active": "a81af68fcb7121e0",
   "lastOpenFiles": [
+    "TFG/imgs-n8n/proxmox-n8n.png",
+    "TFG/imgs-n8n/confred-n8n.png",
+    "TFG/imgs-n8n/1-5_discord_autoblock.png",
+    "TFG/imgs-wazuh/wazuh-proxmox.png",
     "TFG/N8N_Folder/Bot SOC Discord Documentacion.md",
-    "TFG/imgs-n8n/2-8_memoria.png",
+    "TFG/N8N_Folder/N8N.md",
+    "TFG/OpenCTI_Folder/custom_connectors/gemini_enrichment/gemini_connector_documentacion.md",
+    "TFG/OpenCTI_Folder/custom_connectors/multifeed/multifeed_connector_documentacion.md",
+    "TFG/OpenCTI_Folder/OpenCTI.md",
+    "TFG/OpenCTI_Folder/opencti-control_documentacion.md",
+    "TFG/Wazuh_Folder/WAZUH.md",
+    "TFG/OPNsense.md",
+    "Pasted image 20260403112509.png",
+    "Pasted image 20260331173550.png",
+    "Pasted image 20260226154954.png",
+    "Pasted image 20260223185457.png",
+    "Pasted image 20260223185443.png",
+    "Pasted image 20260203173015.png",
+    "Pasted image 20251220200856.png",
+    "TFG/N8N_Folder/WorkFlow SOAR.md",
+    "TFG/Configuracion VM Router.md",
+    "TFG/N8N_Folder/Discord Bot.json",
+    "TFG/N8N_Folder/Discord Bot hilos privados(1).json",
+    "TFG/Bibliografia.md",
     "TFG/imgs-n8n/2-7_ambiguo.png.~tmp",
-    "TFG/imgs-n8n/2-7_ambiguo.png",
     "TFG/imgs-n8n/2-6_conversacional.png.~tmp",
     "TFG/imgs-n8n/2-5_hilo_interactivo.png.~tmp",
-    "TFG/imgs-n8n/2-6_conversacional.png",
-    "TFG/imgs-n8n/2-5_hilo_interactivo.png",
-    "TFG/imgs-n8n/2-4_alias.png",
-    "TFG/imgs-n8n/2-3_notificacion_usuario.png",
-    "TFG/imgs-n8n/2-2_bloqueo_soar.png",
-    "TFG/N8N_Folder/WorkFlow SOAR.md",
-    "TFG/imgs-n8n/2-1_hilo_creado.png",
     "TFG/N8N_Folder/WorkFlow_Bot_Conversacional_v2.md",
-    "TFG/imgs-n8n/1-3_captura_LLM.png",
     "TFG/N8N_Folder/SOAR Inteligente.json",
-    "TFG/imgs-n8n/1-1_captura_simulacion.png",
-    "TFG/OPNsense.md",
-    "TFG/N8N_Folder/N8N.md",
     "TFG/N8N.md",
     "TFG/imgs-n8n",
     "TFG/N8N_Folder",
     "TFG/Nueva carpeta",
-    "TFG/Wazuh_Folder/WAZUH.md",
-    "TFG/OpenCTI_Folder/OpenCTI.md",
-    "TFG/OpenCTI_Folder/custom_connectors/gemini_enrichment/gemini_connector_documentacion.md",
-    "TFG/OpenCTI_Folder/custom_connectors/multifeed/multifeed_connector_documentacion.md",
-    "TFG/OpenCTI_Folder/opencti-control_documentacion.md",
     "TFG/OpenCTI_Folder/connectors/docker-compose-FINAL.yml",
     "TFG/Infra/1. Arquitectura de Red Propuesta.md",
     "TFG/MISC.md",
-    "TFG/imgs-wazuh",
-    "TFG/Wazuh_Folder",
     "TFG/WAZUH.md",
-    "TFG/Configuracion VM Router.md",
     "TFG/OpenCTI.md",
     "README.md",
     "TFG/Infra/Network/NET.md",
     "TFG/Infra/Network/FireWalling.md",
-    "TFG/Bibliografia.md",
     "TFG/DUDAS.md",
     "Bienvenido.md"
   ]

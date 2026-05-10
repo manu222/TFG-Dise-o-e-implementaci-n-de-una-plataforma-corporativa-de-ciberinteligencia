@@ -1,26 +1,50 @@
 
 # Tabla de contenidos
-1. [Creación VM Proxmox](#1-creación-vm-proxmox)
-2. [Configuración de Red](#2-configuración-red)
-    - [2.1 nftables – Reglas de NAT y Forwarding](#etcnftablesconf)
-    - [2.2 Habilitar IP Forwarding (sysctl)](#etcsysctlconf)
-    - [2.3 Configuración de Interfaces (Netplan)](#etcnetplan01-netcfgyaml)
-    - [2.4 Verificación del Estado de Interfaces (ip addr)](#ip-addr-verificación-de-estado)
-3. [Diagrama de Enrutamiento y Forwarding](#diagrama-enrutamiento-y-forwarding)
+1. [Propósito y contexto](#propósito-y-contexto)
+2. [Creación VM Proxmox](#1-creación-vm-proxmox)
+3. [Configuración de Red](#2-configuración-red)
+    - [3.1 nftables – Reglas de NAT y Forwarding](#etcnftablesconf)
+    - [3.2 Habilitar IP Forwarding (sysctl)](#etcsysctlconf)
+    - [3.3 Configuración de Interfaces (Netplan)](#etcnetplan01-netcfgyaml)
+    - [3.4 Verificación del Estado de Interfaces (ip addr)](#ip-addr-verificación-de-estado)
+    - [3.5 Aplicación de la configuración](#aplicación-de-la-configuración)
+    - [3.6 Verificación funcional del reenvío](#verificación-funcional-del-reenvío)
+    - [3.7 Acceso administrativo y rol de bastión](#acceso-administrativo-y-rol-de-bastión)
+4. [Diagrama de Enrutamiento y Forwarding](#diagrama-enrutamiento-y-forwarding)
    
 ---
+
+# Propósito y contexto
+
+Este anexo documenta la configuración técnica de la máquina virtual de enrutamiento utilizada durante la fase inicial del laboratorio, antes de la incorporación del firewall corporativo OPNsense. Su rol está descrito a alto nivel en el apartado 3.2.1.C (Implementación técnica y acceso a la red) de la memoria.
+
+## Entorno de despliegue
+- **Hipervisor:** Proxmox VE sobre servidor *bare metal* contratado en OVHcloud.
+- **Sistema operativo de la VM:** Debian 12 (kernel Linux estándar).
+- **Recursos asignados:** 1 vCore, 2 GB de RAM, 8 GB de disco.
+- **Bridges de Proxmox:** 
+	- `vmbr0` — interfaz externa, conectada a la WAN pública del servidor (mapeada a `ens19` dentro de la VM).
+	- `vmbr1` — interfaz interna, conectada al segmento del laboratorio `10.0.0.0/24`
+
+## Funciones que asume
+
+- Enrutamiento entre el segmento privado (`10.0.0.0/24`) y la WAN pública.
+- NAT (*masquerading*) para que las VMs internas accedan a Internet a través de la única IP pública disponible.
+- Acceso administrativo mediante SSH (la VM funciona como *jump server* hacia el resto del laboratorio).
+- Filtrado de tráfico de reenvío entre interfaces.
+
 >[!WARNING]
-> El uso de esta maquina es exclusivamente para antes de tener OPNsense, cuando tengamos OPNsense dejara de ser util y sera sustituida por esta mencionada anteriormente 
+> El uso de esta máquina está limitado a la fase inicial del despliegue, antes de la incorporación de OPNsense al laboratorio. Una vez OPNsense asume las funciones de enrutamiento, NAT y filtrado, esta VM de router temporal queda en desuso y se sustituye por aquel.
 > 
 ## 1. Creación VM Proxmox
 
-![Pantalla Login](../imgs-router/conf_vm_router.png)
+![Configuración proxmox](../imgs-router/conf_vm_router.png)
 
 ## 2. Configuración Red
 
 ### /etc/nftables.conf 
 
-Este archivo configura las reglas de filtrado de paquetes. Estás usando **nftables**, el sucesor moderno de `iptables`.
+Este archivo configura las reglas de filtrado de paquetes mediante **nftables**, el sucesor moderno de `iptables`.
 
 - **Propósito:** Permitir que las máquinas de tu red privada (10.0.0.x) salgan a internet usando la única IP pública que tienes en la interfaz externa.
     
@@ -29,7 +53,7 @@ Este archivo configura las reglas de filtrado de paquetes. Estás usando **nftab
 
 - `flush ruleset`: Borra cualquier regla anterior para empezar limpio.
     
-- **`table ip nat` (La magia del router):**
+- **`table ip nat`:**
     
     - `chain postrouting`: Actúa cuando el paquete ya está saliendo de la VM.
         
@@ -72,7 +96,7 @@ Configuración de parámetros de Linux.
         
     - Al descomentar esta línea y ponerla en `1`, le dices al Kernel: **"Si recibes un paquete que no es para ti, reenvíalo a donde corresponda"**.
         
-    - **Importancia:** Sin esto, aunque `nftables` esté bien configurado, el Kernel bloquearía el tráfico antes de procesarlo. Es el switch  para convertir un servidor en un router.
+    - **Importancia:** Sin esto, aunque `nftables` esté bien configurado, el kernel bloquearía el tráfico antes de procesarlo. Es el conmutador a nivel de kernel que convierte un servidor en un router.
 
 ```bash
 # Uncomment the next line to enable packet forwarding for IPv4
@@ -81,13 +105,15 @@ net.ipv4.ip_forward=1
 
 ### /etc/netplan/01-netcfg.yaml     
 
+**Nota sobre las direcciones IP públicas mostradas:** Las direcciones públicas reales del servidor *bare metal* utilizado durante el desarrollo se han sustituido en toda la documentación por valores del rango `203.0.113.0/24`, reservado por el RFC 5737 para uso documental. La estructura, máscaras y configuración aplicadas son fieles al despliegue real.
+
 Define las IPs estáticas y rutas de las tarjetas de red. 
 
 - **`ens19` (WAN - Interfaz Externa):**
     
-    - `addresses: [145.239.16.147/32]`: Tu IP pública. El `/32` indica que es una IP única, sin red alrededor.
+    - `addresses: [203.0.113.10]`: Tu IP pública. El `/32` indica que es una IP única, sin red alrededor.
         
-    - `routes`: Configuración especial para proveedores de hosting. Como la máscara es `/32`, no hay puerta de enlace "en la misma red". La ruta dice: "Para llegar al Gateway `145.239.16.254`, lánzalo por la interfaz (`via: 0.0.0.0` y `scope: link`)".
+    - `routes`: Configuración especial para proveedores de hosting. Como la máscara es `/32`, no hay puerta de enlace "en la misma red". La ruta dice: "Para llegar al Gateway `203.0.113.1`, lánzalo por la interfaz (`via: 0.0.0.0` y `scope: link`)".
         
     - `nameservers`: Usamos OpenDNS y Google (8.8.8.8) para resolver dominios.
         
@@ -105,8 +131,8 @@ network:
     ens19:
       dhcp4: no
       dhcp6: no
-      addresses: [145.239.16.147/32]
-      gateway4: 145.239.16.254
+      addresses: [203.0.113.10]
+      gateway4: 203.0.113.1
       nameservers:
         addresses: [208.67.222.222,208.67.220.220,8.8.8.8]
       routes:
@@ -163,16 +189,61 @@ Este comando muestra la realidad actual de las interfaces tras aplicar la config
        valid_lft forever preferred_lft forever
 ```
 
+### Aplicación de la configuración
+
+Tras editar los ficheros descritos arriba, los cambios se aplican con los siguientes comandos:
+
+```bash
+# Aplicar configuración de red (netplan)
+sudo netplan apply
+
+# Aplicar parámetros del kernel (sysctl)
+sudo sysctl -p
+
+# Cargar reglas de nftables y habilitar el servicio para que persistan tras reinicio
+sudo nft -f /etc/nftables.conf
+sudo systemctl enable nftables.service
+sudo systemctl start nftables.service
+```
+
+El servicio `nftables.service` carga automáticamente el fichero `/etc/nftables.conf` en cada arranque del sistema, garantizando que las reglas de NAT y *forwarding* se restablezcan sin intervención manual.
+### Verificación funcional del reenvío
+
+Además de comprobar el estado de las interfaces con `ip addr`, conviene validar que el enrutamiento opera correctamente desde una VM interna:
+
+```bash
+# Confirmar que el reenvío IPv4 está activo
+cat /proc/sys/net/ipv4/ip_forward
+# Salida esperada: 1
+
+# Confirmar que las reglas de nftables están cargadas
+sudo nft list ruleset
+
+# Desde una VM interna, verificar conectividad saliente vía la VM router
+ping -c 4 8.8.8.8
+```
+
+Si las tres comprobaciones devuelven el resultado esperado, la VM está actuando correctamente como *gateway* del segmento privado.
+### Acceso administrativo y rol de bastión
+
+La VM router conserva la configuración SSH por defecto de Debian 12, ya que su rol es transitorio y no expone servicios sensibles. Para acceder al resto de las VMs del segmento privado durante la fase de despliegue inicial, se utilizó el modo *jump server* nativo de OpenSSH:
+
+```bash
+# Acceso directo a una VM interna saltando por la VM router
+ssh -J usuario@<IP_PUBLICA_ROUTER> usuario@10.0.0.X
+```
+
+Este patrón permitió administrar las VMs internas (que no disponían de IP pública propia) sin necesidad de instalar agentes adicionales ni abrir puertos en el firewall. Una vez incorporado OPNsense al laboratorio, esta función se sustituyó por el túnel WireGuard descrito en el anexo correspondiente.
 ## Diagrama enrutamiento y forwarding
 
 ```mermaid
 graph LR
     subgraph Internet
-        ISP[ISP Gateway<br>145.239.16.254]
+        ISP[ISP Gateway<br>203.0.113.1]
     end
 
     subgraph "Router VM"
-        WAN[ens19<br>145.239.16.147]
+        WAN[ens19<br>203.0.113.10]
         Kernel[("sysctl: ip_forward=1<br>nftables: NAT Masquerade")]
         LAN_IF[ens18<br>10.0.0.1]
     end

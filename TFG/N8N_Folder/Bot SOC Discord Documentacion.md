@@ -1,5 +1,7 @@
 ## Resumen
 
+Este anexo documenta el flujo conversacional del bot SOC desplegado en Discord, implementado en n8n y descrito a alto nivel en el apartado 3.2.5 de la memoria. Recoge la arquitectura del agente IA, el system prompt utilizado, las herramientas conectadas y los cinco casos de uso ejecutados durante la fase de validación (apartado 3.6.2 de la memoria).
+
 | Caso | El operador escribe…                                | La IA decide              | Resultado                                       |
 | ---- | --------------------------------------------------- | ------------------------- | ----------------------------------------------- |
 | 1    | `!bot bloquea la ip <X>` en el canal principal      | invocar herramienta       | 🟥 IP bloqueada y conversación movida a hilo    |
@@ -10,7 +12,7 @@
 
 # Asistente SOC Conversacional
 
-El Workflow que recibe peticiones del operador en Discord, las interpreta con un agente IA local (10.10.10.2) (`qwen2.5:14b`) que dispone de un catálogo de herramientas invocables, y decide si responder conversacionalmente, ejecutar una acción real sobre la infraestructura o solicitar aclaraciones. La elección del bloqueo de IPs como herramienta de demostración es estrictamente didáctica: la aportación real es el patrón "agente + catálogo" que permite incorporar nuevas capacidades operativas mediante la simple adición de subworkflows-herramienta.
+El workflow recibe peticiones del operador en Discord, las interpreta con un agente IA local(`qwen2.5:14b`) que dispone de un catálogo de herramientas invocables, y decide si responder conversacionalmente, ejecutar una acción real sobre la infraestructura o solicitar aclaraciones. La elección del bloqueo de IPs como herramienta de demostración es estrictamente didáctica: la aportación real es el patrón "agente + catálogo" que permite incorporar nuevas capacidades operativas mediante la simple adición de subworkflows-herramienta.
 
 ---
 
@@ -40,18 +42,77 @@ flowchart TD
 🟥 acciones ejecutadas · 🟨 aclaraciones · 💬 respuestas conversacionales
 
 ---
+## Detalles técnicos del workflow
+
+El workflow consta de 19 nodos en n8n. A continuación se detallan los nodos cuya lógica trasciende el flujo de alto nivel mostrado en el diagrama anterior.
+
+### Filtro anti-bucle (nodo `If`) 
+
+Inmediatamente después del trigger de Discord, un nodo `If` descarta los mensajes cuyo campo `authorIsBot` sea verdadero. Esta salvaguarda es crítica: sin ella, las confirmaciones publicadas por el propio bot dispararían de nuevo el trigger, generando un bucle infinito de respuestas a sus propias respuestas.
+
+### Generación del título del hilo (nodo `Generar Titulo Hilo`)
+
+Cuando la petición proviene del canal principal y se va a abrir un hilo nuevo, el workflow necesita generar un título corto y representativo. En lugar de usar el agente principal (cargado con memoria y herramientas), se realiza una petición HTTP directa al endpoint `/api/generate` de Ollama con un prompt específico:
+
+```text
+"Resume en máximo 5 palabras el tema de este mensaje para usarlo como título de conversación: \"<mensaje>\". Responde SOLO con el título, sin comillas ni explicaciones."
+```
+
+Esta llamada *one-shot* sin memoria es más ligera que invocar al agente completo y mantiene la separación de responsabilidades: el agente conversa, el generador de título sintetiza.
+
+### Decisión canal vs hilo (nodo `Switch Origen1`)
+
+El nodo evalúa el `channelId` del mensaje contra el ID del canal principal del laboratorio. Si coinciden, el flujo entra en la rama "Canal Principal" (que crea hilo, borra mensaje original e invoca al agente). Si no coinciden, el mensaje proviene necesariamente de un hilo, y el flujo entra en la rama "Hilo" (que preserva el contexto y responde en el mismo hilo).
+
+El `channelId` del canal principal está fijado directamente en el nodo. En un despliegue productivo, este valor se externalizaría a una variable de entorno o credencial de n8n para facilitar el mantenimiento entre instancias.
+
+### Memoria conversacional (nodos `Simple Memory`)
+
+Ambas memorias usan la misma estrategia de `sessionKey`:
+
+```expression
+{{ $('Discord Trigger1').item.json.authorId }}-{{ $('Discord Trigger1').item.json.channelId }}
+```
+
+Esto aprovecha que Discord asigna un `channelId` único a cada hilo (los hilos son técnicamente canales hijos), de modo que la combinación `usuario + canal` genera sesiones independientes de forma natural sin necesidad de lógica adicional. El tipo de memoria es `BufferWindow`, que mantiene únicamente las últimas N interacciones en lugar de un historial infinito que crecería sin control.
+
+### Saneamiento de la salida del modelo (nodos `Code in JavaScript`)
+
+Tras la respuesta del agente y antes de publicarla en Discord, un nodo de código JavaScript filtra el texto en seis pasadas:
+
+1. **Eliminación de razonamiento interno**: borra cualquier bloque `<think>...</think>` que el modelo pudiera incluir si revela su cadena de razonamiento.
+2. **Corte del *thinking* en inglés**: detecta frases-trigger como `"La IP "`, `"He bloqueado "`, `"Acción completada"`, y trunca todo lo que aparezca antes de la primera coincidencia. Esto resuelve un comportamiento observado durante las pruebas: el modelo mezclaba razonamiento en inglés con la respuesta final en español.
+3. 3. **Deduplicación de frases**: parte el texto por puntuación final y elimina frases repetidas. La regex de split usa *lookahead* para no romper IPs por la mitad cuando aparece un `.` en una dirección numérica:
+
+```javascript 
+const sentences = output.split(/(?<=[.!?])(?=\s|$)/); 
+```
+
+4. **Limpieza de autolinks Markdown**: Discord no renderiza correctamente la sintaxis `[texto](url)`, por lo que se sustituye por solo el texto.
+5. **Eliminación de prefijos numerados**: si el modelo empieza con `"1. "`, lo elimina.
+6. **Fallback de seguridad**: si tras la limpieza el texto queda vacío, devuelve `"Acción completada."` para evitar publicar mensajes en blanco.
+7. Esta capa constituye la "envoltura defensiva" mencionada en el apartado 3.2.5.C de la memoria, y es la tercera de las tres palancas que estabilizan el comportamiento del agente cuantizado, junto con el *system prompt* imperativo y la descripción categórica de las herramientas.
+### Paso de contexto entre rama de hilo y agente (nodo `Pasar ContextoHilo`)
+
+En la rama de hilo, un nodo `Set` añade explícitamente el `channelId` del hilo actual al payload antes de pasarlo al `AI Agent Hilo`. Esta operación es necesaria para que el nodo `Send a message Hilo1` sepa a qué hilo concreto debe enviar la respuesta final, ya que el agente IA no propaga este campo por sí solo en su salida.
+
+### Límite de iteraciones del agente (`maxIterations: 6`)
+
+Cada `AI Agent` está configurado con un máximo de 6 iteraciones de *tool calling*. Si el modelo entra en un bucle invocando herramientas repetidamente sin converger hacia una respuesta final, el límite lo corta y devuelve la última salida disponible. Es una salvaguarda contra modelos cuantizados que ocasionalmente quedan atrapados en ciclos de razonamiento.
+
+---
 
 ## Los cinco casos demostrados
 
 ### Caso 1 — Bloqueo desde canal principal
 
-**Acción que lo desencadena:** durante una investigación, el analista identifica una IP maliciosa por inteligencia externa y decide bloquearla sin entrar en la consola de OPNsense. Escribe directamente en el canal `#chat:
+**Acción que lo desencadena:** durante una investigación, el analista identifica una IP maliciosa por inteligencia externa y decide bloquearla sin entrar en la consola de OPNsense. Escribe directamente en el canal `#chat`:
 
 ```
 !bot bloquea la ip 185.220.101.70
 ```
 
-**Qué decide la IA:** la petición coincide con la descripción de la herramienta `BlockIP-TOOL` y el parámetro obligatorio (`srcip`) está presente en el mensaje. Decisión: `invocar herramienta` con `srcip="185.220.101.50"`.
+**Qué decide la IA:** la petición coincide con la descripción de la herramienta `BlockIP-TOOL` y el parámetro obligatorio (`srcip`) está presente en el mensaje. Decisión: `invocar herramienta` con `srcip="185.220.101.70"`.
 
 **Cómo termina:** el workflow encadena la respuesta operativa completa. Genera un título corto para la conversación, abre un hilo nuevo en Discord, borra el mensaje original del canal para no saturarlo, ejecuta la llamada al subworkflow `BlockIP-TOOL` (que añade la IP al alias `Bloqueo_SOAR` de OPNsense y notifica al canal SOAR con embed verde de bloqueo manual), y finalmente publica la confirmación dentro del hilo recién creado.
 
@@ -120,9 +181,9 @@ flowchart TD
 !bot recuérdame qué IPs hemos bloqueado en esta investigación
 ```
 
-**Qué decide la IA:** consulta su memoria conversacional. La clave de sesión está construida como `usuario + canal/hilo`, por lo que cada hilo tiene un historial propio.
+**Qué decide la IA:** consulta su memoria conversacional. La clave de sesión está construida como `usuario + canal/hilo`, por lo que cada hilo tiene un historial propio. Técnicamente, la clave se compone como `authorId-channelId` aprovechando que Discord asigna un `channelId` único a cada hilo aunque sea hijo del canal padre. Esto convierte la separación de hilos en separación de sesiones de forma natural, sin necesidad de lógica adicional en el workflow.
 
-**Cómo termina:** el bot responde con las IPs bloqueadas en *ese hilo concreto*, sin mezclarlas con las del otro hilo del mismo operador. Si la memoria estuviera segmentada únicamente por usuario, ambas investigaciones se contaminarían entre sí. Este aislamiento, aparentemente simple, fue uno de los puntos críticos en el desarrollo: durante las pruebas iniciales el agente del hilo llegaba incluso a comportamientos del agente del canal principal por compartir memoria, hasta que se segmentó la persistencia.
+**Cómo termina:** el bot responde con las IPs bloqueadas en *ese hilo concreto*, sin mezclarlas con las del otro hilo del mismo operador. Si la memoria estuviera segmentada únicamente por usuario, ambas investigaciones se contaminarían entre sí. Este aislamiento, aparentemente simple, fue uno de los puntos críticos en el desarrollo: durante las pruebas iniciales el agente del hilo llegaba a heredar comportamientos del agente del canal principal por compartir memoria, hasta que se segmentó la persistencia.
 ![Hilo Interactivo](../imgs-n8n/2-8_memoria.png)
 
 ---
@@ -179,11 +240,11 @@ Tras invocar la herramienta, confirma al usuario en una frase breve que la IP ha
 | Canal principal       | ✅                | ✅                      | El hilo recién creado    |
 | Hilo ya existente     | ❌                | ❌                      | El mismo hilo            |
 
-| Tipo de petición       | Invoca herramienta | Modifica infraestructura | Notifica a canal SOAR |
-| ---------------------- | :----------------: | :----------------------: | :-------------------: |
-| Acción con parámetros  | ✅                  | ✅                        | ✅                     |
-| Acción incompleta      | ❌                  | ❌                        | ❌                     |
-| Pregunta conversacional| ❌                  | ❌                        | ❌                     |
+| Tipo de petición        | Invoca herramienta | Modifica infraestructura | Notifica a canal SOAR |
+| ----------------------- | :----------------: | :----------------------: | :-------------------: |
+| Acción con parámetros   |         ✅          |            ✅             |           ✅           |
+| Acción incompleta       |         ❌          |            ❌             |           ❌           |
+| Pregunta conversacional |         ❌          |            ❌             |           ❌           |
 
 ---
 ## Extensibilidad del patrón
@@ -192,4 +253,5 @@ Cada nueva capacidad operativa que se quiera dar al bot consiste en:
 
 1. Crear un subworkflow nuevo en n8n con la lógica concreta (entrada normalizada → acción contra el sistema externo → resultado limpio).
 2. Conectarlo al agente como `toolWorkflow` con una descripción clara que incluya cuándo usarlo, sus parámetros y ejemplos de frases del operador que la dispararían.
+Esta capacidad de extensión sin tocar la lógica del agente es la aportación arquitectónica que se reivindica en los apartados 4.3 (Impacto y aportación) y 6 (Futuras líneas de trabajo) de la memoria.
 ---

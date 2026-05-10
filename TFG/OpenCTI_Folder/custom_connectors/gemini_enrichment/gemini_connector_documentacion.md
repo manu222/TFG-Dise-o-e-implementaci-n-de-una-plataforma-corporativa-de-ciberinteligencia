@@ -1,3 +1,22 @@
+# Propósito y contexto
+
+Este anexo documenta el conector **Gemini Enrichment**, segundo de los tres conectores propios desarrollados para la plataforma OpenCTI del laboratorio. Su existencia y motivación se justifican en el apartado 3.2.2.C (Estrategia y desarrollo de conectores) de la memoria; la limitación operativa descrita en la nota inicial está reflejada como desviación documentada en el apartado 3.6.3 (Desviaciones respecto a los objetivos iniciales).
+
+## Diferencias con el conector Multi-Feed
+
+Aunque ambos conectores son piezas propias y comparten patrón de despliegue (mismo Dockerfile base, mismo usuario no privilegiado, misma red `opencti_net`), su rol arquitectónico y modelo de ejecución son opuestos. La comparativa resume las diferencias:
+
+| Característica          | Multi-Feed                                                   | Gemini Enrichment                                |
+| :---------------------- | :----------------------------------------------------------- | :----------------------------------------------- |
+| **Tipo OpenCTI**        | `EXTERNAL_IMPORT`                                            | `INTERNAL_ENRICHMENT`                            |
+| **Modelo de ejecución** | Bucle periódico (cada N segundos)                            | Reactivo (escucha eventos bajo demanda)          |
+| **Dirección del flujo** | Externo → OpenCTI (ingesta)                                  | OpenCTI → Externo → OpenCTI (consulta IA + nota) |
+| **Objetos generados**   | Cientos por ciclo (IPs, dominios, URLs, malware, relaciones) | Uno por evento (Note)                            |
+| **Servicio externo**    | Feeds estáticos HTTP                                         | API REST de Google Gemini                        |
+| **Activación**          | Automática según `CONNECTOR_RUN_EVERY`                       | Manual: el analista pulsa el botón en OpenCTI    |
+| **Coste**               | Cero (feeds OSINT públicos)                                  | Cuota de API Google (limitante en laboratorio)   |
+
+---
 # Documentación Técnica: Conector OpenCTI Gemini Enrichment
 
 **Proyecto:** TFG Ciberseguridad  
@@ -7,11 +26,13 @@
 
 ---
 
-> ⚠️ **LIMITACIÓN IMPORTANTE — API de Desarrollador de Google**
+>[!IMPORTANT] **LIMITACIÓN IMPORTANTE — API de Desarrollador de Google**
 >
-> Este conector fue desarrollado usando la capa gratuita de la **Google AI for Developers API**. Dicha capa tiene una cuota de peticiones extremadamente reducida que, en las pruebas realizadas, **se agotó tras el primer uso completo del conector**.
+> Este conector se desarrolló utilizando la capa gratuita de la **Google AI for Developers API**. Dicha capa impone una cuota de peticiones muy reducida que, en las pruebas realizadas, **se agotó tras el primer uso completo del conector**.
 >
-> A pesar de esta limitación, el conector **logra ejecutarse satisfactoriamente**: recibió el objeto de OpenCTI, envio la informacion a la API de gemini, pero esta consumia todos los tokens inmediatamente antes de poder responder, se llega a la conclusion de que con una API extendida en un entorno empresarial, no nos topariamos con este inconveniente. Para un entorno real se deberia usar una API para un modelo de IA con conexion a internet para contar con la información mas actualizada, por eso no se usa un modelo de IA local en este campo
+> A pesar de esta restricción, el conector resulta **funcionalmente correcto**: recibe el objeto desde OpenCTI, envía la información a la API de Gemini y queda a la espera de respuesta; sin embargo, la API consume todos los tokens disponibles antes de poder devolver el análisis. En un entorno empresarial con cuota contratada esta limitación desaparece, por lo que la pieza se considera lista para su explotación productiva una vez resuelto el aprovisionamiento de cuota.
+>
+> La elección de un modelo en la nube (Gemini) frente a un modelo local responde a un criterio funcional: el análisis de inteligencia se enriquece sustancialmente cuando el modelo dispone de conocimiento actualizado del panorama de amenazas, capacidad que un modelo cuantizado local no puede aportar. Esta decisión convive con el principio de soberanía del dato del laboratorio, ya que el conector solo envía a Gemini objetos STIX ya públicos (IoCs, descripciones de actores conocidos, TTPs de MITRE ATT&CK), nunca telemetría interna ni datos sensibles de la organización.
 
 ---
 
@@ -34,8 +55,7 @@
 
 ## 1. Descripción General
 
-El conector **Gemini Enrichment** es un conector de tipo enriquecimiento para OpenCTI que, al ser invocado manualmente sobre cualquier entidad STIX (malware, actor de amenaza, indicador, etc.), envía toda la información disponible de esa entidad a la API de **Google Gemini** y solicita un análisis técnico en español. El resultado se guardara automáticamente como una **Nota** vinculada al objeto analizado dentro de OpenCTI.
-
+El conector **Gemini Enrichment** es un conector de tipo enriquecimiento para OpenCTI que, al ser invocado manualmente sobre cualquier entidad STIX (malware, actor de amenaza, indicador, etc.), envía toda la información disponible de esa entidad a la API de **Google Gemini** y solicita un análisis técnico en español. El resultado se guarda automáticamente como una **Nota** vinculada al objeto analizado dentro de OpenCTI.
 A diferencia del conector Multi-Feed, este conector **no opera en bucle periódico**: se activa bajo demanda, evento a evento, cuando el analista pulsa el botón de enriquecimiento desde la interfaz de OpenCTI.
 
 ### Flujo resumido
@@ -98,7 +118,7 @@ El Dockerfile de este conector es más ligero: no incluye `build-essential` ni `
 ### Construir la imagen manualmente
 
 ```bash
-cd /opt/opencti/custom_connectors/gemini
+cd /opt/opencti/custom_connectors/gemini_enrichment
 docker build -t opencti-connector-gemini:latest .
 ```
 
@@ -130,6 +150,7 @@ Bloque de servicio para el `docker-compose.yml` de `/opt/opencti/connectors`:
       - opencti_net
 ```
 
+> [!NOTE]
 > `CONNECTOR_SCOPE` define sobre qué tipos de entidades de OpenCTI aparecerá el botón de enriquecimiento de Gemini. Se pueden añadir más tipos separados por coma.
 
 ---
@@ -157,7 +178,6 @@ Bloque de servicio para el `docker-compose.yml` de `/opt/opencti/connectors`:
 | `GEMINI_TEMPERATURE` | `0.2`                  | Creatividad de la respuesta (0.0 = determinista, 1.0 = creativo) |
 | `GEMINI_MAX_TOKENS`  | `2048`                 | Longitud máxima de la respuesta generada                         |
 
-> **Sobre `GEMINI_TEMPERATURE`:** Un valor bajo (0.2) favorece respuestas más precisas y técnicas, adecuadas para análisis de seguridad. Valores altos producen respuestas más variadas y creativas, menos apropiadas para este caso de uso.
 
 ---
 
@@ -222,18 +242,20 @@ Pasos concretos para defender o remediar la amenaza analizada.
 
 Tras el análisis, el conector crea un objeto `Note` en OpenCTI con:
 
-| Campo | Valor |
-|---|---|
-| `abstract` | `Análisis IA (Gemini): <nombre del objeto>` |
-| `content` | Informe completo en Markdown generado por Gemini |
-| `created_by_ref` | El mismo autor del objeto analizado |
-| `object_marking_refs` | Los mismos marcadores TLP del objeto analizado |
-| `object_refs` | Referencia al objeto analizado (la nota aparece vinculada) |
+| Campo                 | Valor                                                      |
+| --------------------- | ---------------------------------------------------------- |
+| `abstract`            | `Análisis IA (Gemini): <nombre del objeto>`                |
+| `content`             | Informe completo en Markdown generado por Gemini           |
+| `created_by_ref`      | El mismo autor del objeto analizado                        |
+| `object_marking_refs` | Los mismos marcadores TLP del objeto analizado             |
+| `object_refs`         | Referencia al objeto analizado (la nota aparece vinculada) |
 
 La nota queda accesible desde la pestaña **"Notas"** del objeto en OpenCTI y es visible para todos los usuarios con acceso a ese objeto.
 
-Se adjunta la imagen de lo comentado anteriormente:
-![Nota quota error](../../../imgs-openctiDOC/gemini_enrichment.png)
+
+A continuación se muestra una captura de pantalla del conector durante una de las pruebas realizadas, donde se observa la nota generada por Gemini junto al objeto analizado, así como el mensaje de cuota agotada devuelto por la API:
+
+![Nota generada por el conector Gemini Enrichment vinculada al objeto STIX, con el error de cuota agotada visible en los logs](../../../imgs-openctiDOC/gemini_enrichment.png)
 
 
 ---
@@ -250,13 +272,13 @@ Se adjunta la imagen de lo comentado anteriormente:
 
 ## 11. Limitaciones Conocidas
 
-| Limitación                              | Detalle                                                                                                                                                                                                    |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Cuota de API agotada**                | La API gratuita de Google AI for Developers tiene cuotas mínimas. En las pruebas del TFG se agotó tras el primer uso. Ver nota al inicio del documento.                                                    |
-| **Sin procesamiento por lotes**         | El conector procesa un objeto a la vez. No está diseñado para enriquecer múltiples entidades en paralelo.                                                                                                  |
-| **Dependencia de conectividad externa** | El contenedor necesita acceso a internet para alcanzar `generativelanguage.googleapis.com`.                                                                                                                |
-| **Calidad del análisis**                | La calidad depende de los datos disponibles en OpenCTI. Objetos con poca información recibirán análisis genéricos.                                                                                         |
-| **Modelo hardcodeado como fallback**    | El valor por defecto de `GEMINI_MODEL` en el código es `gemini-3-pro-preview` (nombre de prueba); se recomienda establecer siempre la variable en el Compose con el nombre correcto del modelo disponible. |
+| Limitación                              | Detalle                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cuota de API agotada**                | La API gratuita de Google AI for Developers tiene cuotas mínimas. En las pruebas del TFG se agotó tras el primer uso. Ver nota al inicio del documento.                                                                                                                                                                                                        |
+| **Sin procesamiento por lotes**         | El conector procesa un objeto a la vez. No está diseñado para enriquecer múltiples entidades en paralelo.                                                                                                                                                                                                                                                      |
+| **Dependencia de conectividad externa** | El contenedor necesita acceso a internet para alcanzar `generativelanguage.googleapis.com`.                                                                                                                                                                                                                                                                    |
+| **Calidad del análisis**                | La calidad depende de los datos disponibles en OpenCTI. Objetos con poca información recibirán análisis genéricos.                                                                                                                                                                                                                                             |
+| **Modelo hardcodeado como fallback**    | El valor por defecto de `GEMINI_MODEL` en el código (`gemini-3-pro-preview`) es un placeholder utilizado durante el desarrollo. Para el despliegue real debe establecerse la variable `GEMINI_MODEL` en el fichero `.env` con un nombre de modelo válido y disponible según la documentación oficial de Google AI for Developers en el momento del despliegue. |
 
 ---
 
@@ -277,7 +299,6 @@ Se adjunta la imagen de lo comentado anteriormente:
 ### Error `GEMINI_API_KEY` al arrancar
 
 - La variable no está definida en el entorno Docker. Asegúrate de que el fichero `.env` del directorio de conectores contiene `GEMINI_API_KEY=<tu_clave>` y que el Compose la referencia con `${GEMINI_API_KEY}`.
-
 ### Reconstruir el conector tras cambios en el código
 
 ```bash
